@@ -1,6 +1,6 @@
 /**
  * Spoiler Shield V4 - Spoiler Intelligence Detector
- * 
+ *
  * This is the main V4 detector that combines:
  * - Knowledge Engine (understands media)
  * - Entity Matcher (Tony Stark = Iron Man)
@@ -17,14 +17,14 @@ class V4SpoilerDetector {
       blockEscalationThreshold: config.blockEscalationThreshold || 0.75,
       ...config
     };
-    
+
     // Initialize intelligence components
     this.knowledgeEngine = new KnowledgeEngine();
     this.entityMatcher = new EntityMatcher(this.knowledgeEngine);
     this.eventDetector = new SpoilerEventDetector(this.knowledgeEngine);
     this.narrativeEngine = new NarrativeInferenceEngine(this.knowledgeEngine);
     this.plotAnalyzer = new PlotDisclosureAnalyzer(this.knowledgeEngine);
-    
+
     // Performance tracking
     this.stats = {
       totalAnalyzed: 0,
@@ -37,7 +37,7 @@ class V4SpoilerDetector {
       blockEscalations: 0,
       avgProcessingTime: 0
     };
-    
+
     console.log('[V4 Detector] Initialized with true spoiler intelligence');
   }
 
@@ -53,7 +53,7 @@ class V4SpoilerDetector {
    */
   analyze(text, trackedMedia = []) {
     const startTime = performance.now();
-    
+
     if (!text || text.length < 10) {
       return this.noSpoilerResult(0, performance.now() - startTime);
     }
@@ -62,7 +62,7 @@ class V4SpoilerDetector {
 
     // Step 1: Get knowledge for tracked media
     const trackedKnowledge = this.knowledgeEngine.getKnowledge(trackedItems);
-    
+
     if (trackedKnowledge.length === 0) {
       return this.noSpoilerResult(0, performance.now() - startTime);
     }
@@ -77,10 +77,10 @@ class V4SpoilerDetector {
     if (relevance.length === 0) {
       relevance = this.inferPlotSignalRelevance(text, trackedKnowledge);
     }
-    
+
     if (relevance.length === 0) {
       this.stats.irrelevantIgnored++;
-      return this.noSpoilerResult(0, performance.now() - startTime, { 
+      return this.noSpoilerResult(0, performance.now() - startTime, {
         reason: 'not_relevant',
         relevance: []
       });
@@ -89,21 +89,21 @@ class V4SpoilerDetector {
     // Step 3: Find entities mentioned (Tony Stark, Iron Man, etc.)
     const relevantMedia = relevance.map(r => r.media);
     const foundEntities = this.entityMatcher.findEntities(text, relevantMedia);
-    
+
     if (foundEntities.length > 0) {
       this.stats.entityMatches++;
     }
 
     // Step 4: Detect spoiler events (deaths, endings, victories)
     const detectedEvents = this.eventDetector.detectEvents(text, relevantMedia, foundEntities);
-    
+
     if (detectedEvents.length > 0) {
       this.stats.eventMatches++;
     }
 
     // Step 5: Detect narrative spoilers ("Cap gets his dance")
     const detectedNarratives = this.narrativeEngine.detectNarratives(text, relevantMedia);
-    
+
     if (detectedNarratives.length > 0) {
       this.stats.narrativeMatches++;
     }
@@ -129,7 +129,7 @@ class V4SpoilerDetector {
 
     // Step 7: Block-level classification (prevent leakage)
     const blockAnalysis = this.analyzeBlock(text, analysis);
-    
+
     // Step 8: Decide if we should blur
     // Names/titles alone are NOT spoilers — require plot/event/narrative signal
     const hasSpoilerSignal =
@@ -139,11 +139,11 @@ class V4SpoilerDetector {
     const shouldBlur = hasSpoilerSignal && analysis.probability >= this.config.spoilerThreshold;
     // Always blur the whole content block when a spoiler is detected (prevents half-blur leakage)
     const shouldEscalate = shouldBlur || blockAnalysis.shouldEscalate;
-    
+
     if (shouldEscalate) {
       this.stats.blockEscalations++;
     }
-    
+
     if (shouldBlur) {
       this.stats.relevantBlocked++;
     }
@@ -157,20 +157,20 @@ class V4SpoilerDetector {
       probability: analysis.probability,
       confidence: analysis.confidence,
       severity: analysis.severity,
-      
+
       // Intelligence data
       relevance: relevance,
       entities: foundEntities,
       events: detectedEvents,
       narratives: detectedNarratives,
       plotDisclosures: plotDisclosures,
-      
+
       // Block analysis
       blockAnalysis: blockAnalysis,
-      
+
       // Reasoning
       reasoning: this.generateReasoning(analysis, foundEntities, detectedEvents, detectedNarratives, plotDisclosures, blockAnalysis),
-      
+
       // Performance
       processingTime: processingTime
     };
@@ -224,7 +224,7 @@ class V4SpoilerDetector {
     let probability = 0;
     let confidence = 0;
     let severity = 'minor';
-    
+
     // Base probability from relevance
     if (relevance.length > 0) {
       const maxRelevance = Math.max(...relevance.map(r => r.confidence));
@@ -244,7 +244,7 @@ class V4SpoilerDetector {
       // Check severity of events
       const hasCritical = events.some(e => e.severity === 'critical');
       const hasMajor = events.some(e => e.severity === 'major');
-      
+
       if (hasCritical) {
         probability += 0.50; // Critical events are 50% probability boost
         severity = 'critical';
@@ -254,7 +254,7 @@ class V4SpoilerDetector {
       } else {
         probability += 0.20;
       }
-      
+
       confidence += 0.30;
     }
 
@@ -265,7 +265,7 @@ class V4SpoilerDetector {
         if (n.severity === 'major' && max !== 'critical') return 'major';
         return max;
       }, 'minor');
-      
+
       if (maxNarrativeSeverity === 'critical') {
         probability += 0.45;
         severity = 'critical';
@@ -273,7 +273,7 @@ class V4SpoilerDetector {
         probability += 0.30;
         if (severity !== 'critical') severity = 'major';
       }
-      
+
       confidence += 0.20;
     }
 
@@ -310,7 +310,7 @@ class V4SpoilerDetector {
    */
   analyzeBlock(text, analysis) {
     const sentences = text.split(/[.!?]+\s+/).filter(s => s.length >= 10);
-    
+
     if (sentences.length === 0) {
       return {
         shouldEscalate: false,
@@ -325,18 +325,18 @@ class V4SpoilerDetector {
     const entityCount = (analysis.entities || []).length;
     const eventCount = (analysis.events || []).length;
     const narrativeCount = (analysis.narratives || []).length;
-    
+
     const signalCount = entityCount + eventCount + narrativeCount;
     const entityDensity = entityCount / sentences.length;
     const eventDensity = (eventCount + narrativeCount) / sentences.length;
-    
+
     // Escalation rules
-    const shouldEscalate = 
+    const shouldEscalate =
       signalCount >= 3 ||                     // 3+ signals
       eventCount >= 2 ||                      // 2+ events
       eventDensity >= 0.30 ||                 // 30%+ event density
       analysis.probability >= this.config.blockEscalationThreshold; // High probability
-    
+
     return {
       shouldEscalate: shouldEscalate,
       sentenceCount: sentences.length,
@@ -354,7 +354,7 @@ class V4SpoilerDetector {
    */
   generateReasoning(analysis, entities, events, narratives, plotDisclosures, blockAnalysis) {
     const reasons = [];
-    
+
     // Block escalation
     if (blockAnalysis.shouldEscalate) {
       reasons.push(`⚠️ BLOCK BLUR: ${blockAnalysis.signalCount} spoiler signals detected`);
@@ -440,9 +440,9 @@ class V4SpoilerDetector {
     console.group('[V4 Test]');
     console.log('Text:', text);
     console.log('Tracked:', trackedTitles);
-    
+
     const result = this.analyze(text, trackedTitles);
-    
+
     console.log('Result:', result);
     console.log('Is Spoiler:', result.isSpoiler);
     console.log('Probability:', (result.probability * 100).toFixed(0) + '%');
@@ -450,9 +450,9 @@ class V4SpoilerDetector {
     console.log('Events Detected:', result.events.length);
     console.log('Narratives:', result.narratives.length);
     console.log('Reasoning:', result.reasoning);
-    
+
     console.groupEnd();
-    
+
     return result;
   }
 }

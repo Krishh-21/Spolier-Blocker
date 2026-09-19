@@ -1,11 +1,11 @@
 /**
  * Spoiler Shield V4 - Knowledge Engine
- * 
+ *
  * TRUE SPOILER INTELLIGENCE SYSTEM
- * 
+ *
  * This is NOT regex matching.
  * This is entity understanding + event detection + narrative inference.
- * 
+ *
  * The system KNOWS:
  * - Characters (Tony Stark = Iron Man)
  * - Events (death, victory, reveal)
@@ -181,7 +181,7 @@ class KnowledgeEngine {
 
     // Sports templates
     this.addSportsKnowledge();
-    
+
     // Awards templates
     this.addAwardsKnowledge();
   }
@@ -242,7 +242,7 @@ class KnowledgeEngine {
   addMedia(mediaData) {
     const key = mediaData.title.toLowerCase();
     this.knowledgeBase.set(key, mediaData);
-    
+
     // Index aliases
     if (mediaData.aliases) {
       for (const alias of mediaData.aliases) {
@@ -252,7 +252,7 @@ class KnowledgeEngine {
   }
 
   /**
-   * Get knowledge for tracked media (titles or full media objects with phrases) 
+   * Get knowledge for tracked media (titles or full media objects with phrases)
    * UNIVERSAL APPROACH - Works for ANY movie/TV show
    */
   getKnowledge(trackedItems) {
@@ -269,11 +269,11 @@ class KnowledgeEngine {
     const mediaType = typeof item === 'string' ? 'movie' : (item.type || item.mediaType || 'movie');
     const tmdbId = typeof item === 'object' ? item.tmdbId : null;
     const storedKnowledge = typeof item === 'object' ? item.knowledge : null;
-    
+
     // Check if we have hardcoded knowledge first
     const key = title.toLowerCase();
     let media = this.knowledgeBase.get(key);
-    
+
     if (media) {
       // Per-watchlist enrichment must not mutate the shared built-in knowledge.
       media = { ...media, aliases: [...(media.aliases || [])],
@@ -368,28 +368,28 @@ class KnowledgeEngine {
       { pattern: /\b(dies?|died|death|killed|kills|dead|murdered)\b/i, type: 'death', weight: 0.9 },
       { pattern: /\b(doesn\'t survive|didn\'t make it|perished|funeral|grave)\b/i, type: 'death', weight: 0.8 },
       { pattern: /\b(sacrifices?|sacrificed|gave (their|his|her) life)\b/i, type: 'death', weight: 0.85 },
-      
+
       // Ending patterns
       { pattern: /\b(ending|finale|final episode|final season|concludes|how it ends)\b/i, type: 'ending', weight: 0.95 },
       { pattern: /\b(in the end|at the end|by the end|series finale)\b/i, type: 'ending', weight: 0.8 },
       { pattern: /\b(last episode|final chapter|final scene)\b/i, type: 'ending', weight: 0.85 },
-      
+
       // Victory/defeat patterns
       { pattern: /\b(wins?|won|winner|victory|defeats?|beats?|conquers?|champion)\b/i, type: 'victory', weight: 0.7 },
       { pattern: /\b(loses?|lost|fails?|defeated|beaten|loses)\b/i, type: 'defeat', weight: 0.7 },
-      
+
       // Revelation/twist patterns
       { pattern: /\b(reveals?|revealed|turns out|actually is|secret|truth|discovers?)\b/i, type: 'revelation', weight: 0.8 },
       { pattern: /\b(plot twist|twist|surprise|shocking|unexpected|reveal)\b/i, type: 'plot_twist', weight: 0.85 },
       { pattern: /\b(betrays?|betrayed|betrayal|double cross|backstab)\b/i, type: 'betrayal', weight: 0.8 },
-      
+
       // Transformation patterns
       { pattern: /\b(becomes?|became|turns into|transforms?|villain|evil|dark side)\b/i, type: 'transformation', weight: 0.7 },
-      
+
       // Relationship patterns
       { pattern: /\b(marries?|married|wedding|divorce|breakup|together|relationship)\b/i, type: 'relationship', weight: 0.6 },
       { pattern: /\b(pregnant|baby|child|kids|family)\b/i, type: 'family', weight: 0.5 },
-      
+
       // Outcome patterns
       { pattern: /\b(survives?|survived|lives?|lived|makes it|escapes?|escaped)\b/i, type: 'survival', weight: 0.6 },
       { pattern: /\b(arrested|caught|captured|imprisoned|jail|prison)\b/i, type: 'arrest', weight: 0.6 }
@@ -402,16 +402,16 @@ class KnowledgeEngine {
   addCharacterPhrases(media, phrases) {
     for (const phrase of phrases) {
       if (!this.isValidCharacterPhrase(phrase, media.title)) continue;
-      
+
       const cleanPhrase = phrase.trim();
       const lowerPhrase = cleanPhrase.toLowerCase();
-      
+
       // Check if already exists
       const exists = media.characters.some(c =>
         c.name.toLowerCase() === lowerPhrase ||
         (c.aliases && c.aliases.some(a => a.toLowerCase() === lowerPhrase))
       );
-      
+
       if (!exists && cleanPhrase.split(' ').length <= 4) {
         media.characters.push({
           name: cleanPhrase,
@@ -446,11 +446,11 @@ class KnowledgeEngine {
         }
       }
     }
-    
+
     if (tmdbData.keywords) {
       media.keywords = [...new Set([...media.keywords, ...tmdbData.keywords])];
     }
-    
+
     if (tmdbData.genres) {
       media.genres = [...new Set([...media.genres, ...tmdbData.genres])];
     }
@@ -597,10 +597,10 @@ class EntityMatcher {
   findEntities(text, mediaKnowledge) {
     const foundEntities = [];
     const lowerText = text.toLowerCase();
-    
+
     for (const media of mediaKnowledge) {
       const entities = media.characters || media.entities || [];
-      
+
       for (const entity of entities) {
         const matchedAs = this.matchEntityName(lowerText, entity);
         if (matchedAs) {
@@ -613,7 +613,7 @@ class EntityMatcher {
         }
       }
     }
-    
+
     return foundEntities;
   }
 
@@ -652,14 +652,14 @@ class SpoilerEventDetector {
   detectEvents(text, mediaKnowledge, foundEntities) {
     const detectedEvents = [];
     const lowerText = text.toLowerCase();
-    
+
     for (const media of mediaKnowledge) {
       if (!media.majorEvents) continue;
-      
+
       for (const event of media.majorEvents) {
         let eventDetected = false;
         let confidence = 0;
-        
+
         // Check if event entity is mentioned (in found entities OR directly in text)
         const entityMentioned = event.entity && (
           foundEntities.some(fe =>
@@ -670,9 +670,9 @@ class SpoilerEventDetector {
           ) ||
           this.entityMentionedInText(lowerText, event.entity, media)
         );
-        
+
         if (!entityMentioned && event.entity) continue;
-        
+
         // Detect event type without exact keywords
         switch(event.type) {
           case 'death':
@@ -709,12 +709,12 @@ class SpoilerEventDetector {
             break;
           default:
             // Generic event detection
-            eventDetected = event.keywords && event.keywords.some(kw => 
+            eventDetected = event.keywords && event.keywords.some(kw =>
               lowerText.includes(kw.toLowerCase())
             );
             confidence = 0.75;
         }
-        
+
         if (eventDetected) {
           detectedEvents.push({
             type: event.type,
@@ -727,7 +727,7 @@ class SpoilerEventDetector {
         }
       }
     }
-    
+
     return detectedEvents;
   }
 
@@ -773,7 +773,7 @@ class SpoilerEventDetector {
       'jumps off', 'jumped to her death', 'jumped to his death',
       'casualties', 'major casualties', 'loses her life', 'loses his life'
     ];
-    
+
     return deathIndicators.some(indicator => text.includes(indicator));
   }
 
@@ -789,7 +789,7 @@ class SpoilerEventDetector {
       'takes home', 'awarded', 'receives',
       'p1', 'first place', 'gold medal'
     ];
-    
+
     return victoryIndicators.some(indicator => text.includes(indicator));
   }
 
@@ -804,7 +804,7 @@ class SpoilerEventDetector {
       'turned on', 'sells out', 'sold out',
       'working for', 'secretly', 'mole'
     ];
-    
+
     return betrayalIndicators.some(indicator => text.includes(indicator));
   }
 
@@ -819,7 +819,7 @@ class SpoilerEventDetector {
       'truth', 'secret', 'actually', 'turns out',
       'identity', 'exposed', 'unmasked'
     ];
-    
+
     return revelationIndicators.some(indicator => text.includes(indicator));
   }
 
@@ -833,7 +833,7 @@ class SpoilerEventDetector {
       'last episode', 'series finale', 'how it ends',
       'in the end', 'at the end', 'by the end'
     ];
-    
+
     return endingIndicators.some(indicator => text.includes(indicator));
   }
 
@@ -847,7 +847,7 @@ class SpoilerEventDetector {
       'revealed to be', 'revealed as', 'actually is',
       'villain', 'antagonist', 'evil', 'dark side'
     ];
-    
+
     return transformationIndicators.some(indicator => text.includes(indicator));
   }
 
@@ -856,7 +856,7 @@ class SpoilerEventDetector {
    */
   detectPlotEvent(text, outcome) {
     if (!outcome) return false;
-    
+
     const outcomeWords = outcome.toLowerCase().split(/\s+/);
     return outcomeWords.filter(w => w.length > 3).some(word => text.includes(word));
   }
@@ -882,7 +882,7 @@ class SpoilerEventDetector {
       'win': 'moderate',
       'incident': 'minor'
     };
-    
+
     return severityMap[eventType] || 'moderate';
   }
 }
@@ -900,10 +900,10 @@ class NarrativeInferenceEngine {
    */
   detectNarratives(text, mediaKnowledge) {
     const detectedNarratives = [];
-    
+
     for (const media of mediaKnowledge) {
       if (!media.narratives) continue;
-      
+
       for (const narrative of media.narratives) {
         if (narrative.pattern.test(text)) {
           detectedNarratives.push({
@@ -916,7 +916,7 @@ class NarrativeInferenceEngine {
         }
       }
     }
-    
+
     return detectedNarratives;
   }
 }
