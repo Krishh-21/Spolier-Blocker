@@ -1,0 +1,31 @@
+name: Verify release
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - run: npm ci --ignore-scripts --prefix 'Spolier blocker v1/Spolier blocker Cursor new/tmdb-proxy'
+      - run: npm audit --audit-level=high
+      - run: npm audit --audit-level=high --prefix 'Spolier blocker v1/Spolier blocker Cursor new/tmdb-proxy'
+      - run: npm audit --audit-level=high --prefix 'Spolier blocker v1/Spolier blocker Cursor new'
+      - run: npm run check
+      - run: npm test
+      - run: npm run test:proxy
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:browser
+      - run: npm run build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: spoiler-shield
+          path: dist/

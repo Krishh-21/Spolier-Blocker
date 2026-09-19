@@ -1,0 +1,15 @@
+{
+  "name": "spoiler-shield",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Local-first spoiler protection browser extension",
+  "scripts": {
+    "test": "node --test tests/*.test.cjs",
+    "test:browser": "playwright test",
+    "test:proxy": "node --test tests/proxy-runtime.cjs",
+    "check": "node scripts/check.cjs",
+    "build": "node scripts/build.cjs"
+  },
+  "engines": { "node": ">=22" },
+  "devDependencies": { "@playwright/test": "1.63.0" }
+}

@@ -1,0 +1,689 @@
+{
+  "documentType": "codex-security.findings",
+  "findings": [
+    {
+      "attackPath": {
+        "dataflow": {
+          "evidenceRefs": [
+            "oauth-storage",
+            "external-admission",
+            "external-response"
+          ],
+          "summary": "A Google OAuth result is stored with userAccount.token in sync storage. The external getUserAccount handler returns that entire object without additional sender validation."
+        },
+        "reachability": {
+          "attacker": "A script on an admitted localhost or placeholder domain sends getUserAccount and receives profile data and any stored live bearer token.",
+          "summary": "Requires successfully configured OAuth or a preexisting synced live token; manifest currently has a placeholder client ID. Declared token scopes cover identity/profile/email, not Gmail or Drive. Chrome external admission still blocks unrelated origins."
+        },
+        "summary": "A script on an admitted localhost or placeholder domain sends getUserAccount and receives profile data and any stored live bearer token."
+      },
+      "codeEvidence": [
+        {
+          "code": "      const userAccount = {\n        email: userInfo.email,\n        name: userInfo.name || userInfo.email.split('@')[0],\n        picture: userInfo.picture || null,\n        token: token,\n        id: userInfo.id || null\n      };\n      \n      chrome.storage.sync.set({ userAccount }, () => {",
+          "endLine": 250,
+          "explanation": "The live token is persisted with the display profile.",
+          "id": "oauth-storage",
+          "label": "Oauth storage",
+          "language": "javascript",
+          "path": "Spolier blocker v1/Spolier blocker Cursor new/options.js",
+          "role": "propagation",
+          "startLine": 242
+        },
+        {
+          "code": "  \"externally_connectable\": {\n    \"matches\": [\n      \"*://localhost/*\",\n      \"*://127.0.0.1/*\",\n      \"*://*.yourdomain.com/*\",\n      \"file:///*\"\n    ]\n  }\n}",
+          "endLine": 98,
+          "explanation": "The manifest admits development and placeholder website origins.",
+          "id": "external-admission",
+          "label": "External admission",
+          "language": "javascript",
+          "path": "Spolier blocker v1/Spolier blocker Cursor new/manifest.json",
+          "role": "entrypoint",
+          "startLine": 90
+        },
+        {
+          "code": "chrome.runtime.onMessageExternal.addListener((request, sender, sendResponse) => {\n  console.log('[Background] External message received:', request);\n  \n  if (request.type === 'ping') {\n    sendResponse({ success: true, extensionId: chrome.runtime.id });\n    return true;\n  }\n  \n  if (request.type === 'getUserAccount') {\n    chrome.storage.sync.get(['userAccount'], (data) => {\n      sendResponse({ userAccount: data.userAccount || null });\n    });\n    return true; // Keep channel open for async response\n  }",
+          "endLine": 502,
+          "explanation": "An admitted caller receives the entire stored account, including token when present.",
+          "id": "external-response",
+          "label": "External response",
+          "language": "javascript",
+          "path": "Spolier blocker v1/Spolier blocker Cursor new/background.js",
+          "role": "root_control",
+          "startLine": 489
+        }
+      ],
+      "confidence": {
+        "level": "high",
+        "rationale": "Source-to-sink trace with explicit deployment prerequisites and counterevidence."
+      },
+      "findingId": "csf_2a8d725064404af9d68bd0d8",
+      "fingerprints": {
+        "algorithm": "codex-security/v1",
+        "primary": "codex-security/v1:sha256:a334f2b5b8b7847e34decf6d79a5d34022f5abef97bbaf9237df84a103198944"
+      },
+      "identity": {
+        "anchor": "external-account-requests-disclose-a-stored-oauth-token"
+      },
+      "locations": [
+        {
+          "endLine": 250,
+          "path": "Spolier blocker v1/Spolier blocker Cursor new/options.js",
+          "role": "propagation",
+          "startLine": 242
+        },
+        {
+          "endLine": 98,
+          "path": "Spolier blocker v1/Spolier blocker Cursor new/manifest.json",
+          "role": "entrypoint",
+          "startLine": 90
+        },
+        {
+          "endLine": 502,
+          "path": "Spolier blocker v1/Spolier blocker Cursor new/background.js",
+          "role": "root_control",
+          "startLine": 489
+        }
+      ],
+      "occurrenceId": "occ_7a5bc434b370353284f304d9",
+      "provenance": {
+        "candidateId": "external-account-token",
+        "originalCandidates": [
+          {
+            "endLine": 502,
+            "path": "Spolier blocker v1/Spolier blocker Cursor new/background.js",
+            "startLine": 489,
+            "summary": "getUserAccount returns userAccount including options.js persisted token to manifest-allowed localhost/yourdomain.com origins. Requires configured OAuth.",
+            "title": "External messaging returns stored OAuth bearer token"
+          }
+        ],
+        "source": "local_plugin"
+      },
+      "remediation": "Remove external account/sign-out messaging and public admission rules; keep credentials in restricted local storage and return only explicit nonsecret settings.",
+      "remediationTests": [],
+      "rootCause": {
+        "evidenceRefs": [
+          "oauth-storage",
+          "external-admission",
+          "external-response"
+        ],
+        "summary": "A Google OAuth result is stored with userAccount.token in sync storage. The external getUserAccount handler returns that entire object without additional sender validation."
+      },
+      "ruleId": "external-account-token",
+      "severity": {
+        "level": "medium"
+      },
+      "summary": "A Google OAuth result is stored with userAccount.token in sync storage. The external getUserAccount handler returns that entire object without additional sender validation.",
+      "taxonomy": {
+        "category": "external-account-token",
+        "cwe": [
+          "CWE-201"
+        ]
+      },
+      "title": "External account requests disclose a stored OAuth token",
+      "validation": {
+        "evidenceRefs": [
+          "oauth-storage",
+          "external-admission",
+          "external-response"
+        ],
+        "limitations": [
+          "Requires successfully configured OAuth or a preexisting synced live token; manifest currently has a placeholder client ID.",
+          "Declared token scopes cover identity/profile/email, not Gmail or Drive. Chrome external admission still blocks unrelated origins."
+        ],
+        "method": "static source trace",
+        "summary": "A script on an admitted localhost or placeholder domain sends getUserAccount and receives profile data and any stored live bearer token."
+      }
+    },
+    {
+      "attackPath": {
+        "dataflow": {
+          "evidenceRefs": [
+            "api-limiter",
+            "health-fetch"
+          ],
+          "summary": "The limiter is mounted only on /3/. Every /health request independently starts a keyed TMDB request, with no aggregate rate or concurrency control."
+        },
+        "reachability": {
+          "attacker": "A remote client repeatedly calls /health with an accepted Origin header, consuming shared upstream API capacity outside the /3 request budget.",
+          "summary": "Requires an exposed deployed proxy with DEFAULT_TMDB_KEY configured. Reverse-proxy controls were not supplied. CORS is not authentication; a nonbrowser client can supply an accepted Origin. Individual calls have a three-second timeout. Six identical proxy copies are affected; v1.1 lacks this route."
+        },
+        "summary": "A remote client repeatedly calls /health with an accepted Origin header, consuming shared upstream API capacity outside the /3 request budget."
+      },
+      "codeEvidence": [
+        {
+          "code": "// Rate limiting: 100 requests per 15 minutes per IP\nconst limiter = rateLimit({\n  windowMs: 15 * 60 * 1000,\n  max: 100,\n  message: { error: 'Too many requests, please try again later' },\n  standardHeaders: true,\n  legacyHeaders: false\n});\n\napp.use('/3/', limiter);",
+          "endLine": 47,
+          "explanation": "The request budget applies only to API-forwarding routes.",
+          "id": "api-limiter",
+          "label": "Api limiter",
+          "language": "javascript",
+          "path": "Spolier blocker v1/Spolier blocker Cursor new/tmdb-proxy/server.js",
+          "role": "expected_control",
+          "startLine": 38
+        },
+        {
+          "code": "app.get('/health', async (req, res) => {\n  const health = {\n    status: 'ok',\n    timestamp: new Date().toISOString(),\n    tmdbConfigured: !!TMDB_KEY,\n    tmdbReachable: false\n  };\n  \n  // Test TMDB API connectivity\n  if (TMDB_KEY) {\n    try {\n      const controller = new AbortController();\n      const timeoutId = setTimeout(() => controller.abort(), 3000);\n      \n      const testResponse = await fetch(\n        `https://api.themoviedb.org/3/configuration?api_key=${TMDB_KEY}`,\n        { signal: controller.signal }\n      );\n      clearTimeout(timeoutId);\n      ",
+          "endLine": 123,
+          "explanation": "The separate public health path bypasses that budget and allocates upstream work per call.",
+          "id": "health-fetch",
+          "label": "Health fetch",
+          "language": "javascript",
+          "path": "Spolier blocker v1/Spolier blocker Cursor new/tmdb-proxy/server.js",
+          "role": "root_control",
+          "startLine": 104
+        }
+      ],
+      "confidence": {
+        "level": "high",
+        "rationale": "Source-to-sink trace with explicit deployment prerequisites and counterevidence."
+      },
+      "findingId": "csf_3c1f477a405ade0ab947ed00",
+      "fingerprints": {
+        "algorithm": "codex-security/v1",
+        "primary": "codex-security/v1:sha256:5e4592bb6772c068bd7c9257e7900ebd542e0e898f11dcd6ab4464de9e8244a1"
+      },
+      "identity": {
+        "anchor": "public-health-checks-bypass-the-proxy-request-quota"
+      },
+      "locations": [
+        {
+          "endLine": 47,
+          "path": "Spolier blocker v1/Spolier blocker Cursor new/tmdb-proxy/server.js",
+          "role": "expected_control",
+          "startLine": 38
+        },
+        {
+          "endLine": 123,
+          "path": "Spolier blocker v1/Spolier blocker Cursor new/tmdb-proxy/server.js",
+          "role": "root_control",
+          "startLine": 104
+        }
+      ],
+      "occurrenceId": "occ_e839def7714c81d35149ee5c",
+      "provenance": {
+        "candidateId": "proxy-health-unlimited-upstream",
+        "originalCandidates": [
+          {
+            "endLine": 133,
+            "path": "Spolier blocker v1.5/Spolier blocker Cursor new/tmdb-proxy/server.js",
+            "startLine": 104,
+            "summary": "Every health request invokes authenticated upstream fetch; limiter mounted only at /3. Six identical server copies; v1.1 excluded.",
+            "title": "Health endpoint bypasses rate limiter"
+          }
+        ],
+        "source": "local_plugin"
+      },
+      "remediation": "Make public liveness/readiness local and cheap; impose deadlines and response-size bounds on actual upstream requests.",
+      "remediationTests": [],
+      "rootCause": {
+        "evidenceRefs": [
+          "api-limiter",
+          "health-fetch"
+        ],
+        "summary": "The limiter is mounted only on /3/. Every /health request independently starts a keyed TMDB request, with no aggregate rate or concurrency control."
+      },
+      "ruleId": "proxy-health-unlimited-upstream",
+      "severity": {
+        "level": "medium"
+      },
+      "summary": "The limiter is mounted only on /3/. Every /health request independently starts a keyed TMDB request, with no aggregate rate or concurrency control.",
+      "taxonomy": {
+        "category": "proxy-health-unlimited-upstream",
+        "cwe": [
+          "CWE-770"
+        ]
+      },
+      "title": "Public health checks bypass the proxy request quota",
+      "validation": {
+        "evidenceRefs": [
+          "api-limiter",
+          "health-fetch"
+        ],
+        "limitations": [
+          "Requires an exposed deployed proxy with DEFAULT_TMDB_KEY configured. Reverse-proxy controls were not supplied.",
+          "CORS is not authentication; a nonbrowser client can supply an accepted Origin. Individual calls have a three-second timeout.",
+          "Six identical proxy copies are affected; v1.1 lacks this route."
+        ],
+        "method": "static source trace",
+        "summary": "A remote client repeatedly calls /health with an accepted Origin header, consuming shared upstream API capacity outside the /3 request budget."
+      }
+    },
+    {
+      "attackPath": {
+        "dataflow": {
+          "evidenceRefs": [
+            "keyed-health-url",
+            "public-error"
+          ],
+          "summary": "The health fetch URL contains the server API key. Its catch block copies error.message into the public response; node-fetch 2.7.0 includes request.url in network failure messages."
+        },
+        "reachability": {
+          "attacker": "During an upstream network failure, a remote health requester can receive an error string containing the operator key as api_key in the request URL.",
+          "summary": "Disclosure requires an upstream DNS/TLS/socket failure, not an ordinary HTTP error or necessarily an abort. An arbitrary caller cannot force that fixed-host failure. Dependency formatting verified in official node-fetch v2.7.0 src/index.js lines 113\u2013114: https://github.com/node-fetch/node-fetch/blob/v2.7.0/src/index.js#L113-L114. No live deployment probed."
+        },
+        "summary": "During an upstream network failure, a remote health requester can receive an error string containing the operator key as api_key in the request URL."
+      },
+      "codeEvidence": [
+        {
+          "code": "      const controller = new AbortController();\n      const timeoutId = setTimeout(() => controller.abort(), 3000);\n      \n      const testResponse = await fetch(\n        `https://api.themoviedb.org/3/configuration?api_key=${TMDB_KEY}`,\n        { signal: controller.signal }\n      );\n      clearTimeout(timeoutId);",
+          "endLine": 122,
+          "explanation": "The credential is present in the URL passed to node-fetch.",
+          "id": "keyed-health-url",
+          "label": "Keyed health url",
+          "language": "javascript",
+          "path": "Spolier blocker v1/Spolier blocker Cursor new/tmdb-proxy/server.js",
+          "role": "propagation",
+          "startLine": 115
+        },
+        {
+          "code": "    } catch (error) {\n      health.tmdbReachable = false;\n      health.tmdbError = error.message;\n    }\n  }\n  \n  // Return 503 if unhealthy, 200 if healthy\n  const statusCode = (health.tmdbConfigured && health.tmdbReachable) ? 200 : 503;\n  res.status(statusCode).json(health);",
+          "endLine": 133,
+          "explanation": "Raw exception text is returned in the health JSON without redaction.",
+          "id": "public-error",
+          "label": "Public error",
+          "language": "javascript",
+          "path": "Spolier blocker v1/Spolier blocker Cursor new/tmdb-proxy/server.js",
+          "role": "root_control",
+          "startLine": 125
+        }
+      ],
+      "confidence": {
+        "level": "high",
+        "rationale": "Source-to-sink trace with explicit deployment prerequisites and counterevidence."
+      },
+      "findingId": "csf_251cdc36bf223731d4dfb9c4",
+      "fingerprints": {
+        "algorithm": "codex-security/v1",
+        "primary": "codex-security/v1:sha256:cfb9c13e032dcad6a7b97a425b7e4c959c37b898658321018e50af63f0eaeb46"
+      },
+      "identity": {
+        "anchor": "network-failure-health-responses-disclose-the-tmdb-api-key"
+      },
+      "locations": [
+        {
+          "endLine": 122,
+          "path": "Spolier blocker v1/Spolier blocker Cursor new/tmdb-proxy/server.js",
+          "role": "propagation",
+          "startLine": 115
+        },
+        {
+          "endLine": 133,
+          "path": "Spolier blocker v1/Spolier blocker Cursor new/tmdb-proxy/server.js",
+          "role": "root_control",
+          "startLine": 125
+        }
+      ],
+      "occurrenceId": "occ_c5f05a1717360cdf90813643",
+      "provenance": {
+        "candidateId": "proxy-health-error-secret",
+        "originalCandidates": [
+          {
+            "endLine": 133,
+            "path": "Spolier blocker v1.5/Spolier blocker Cursor new/tmdb-proxy/server.js",
+            "startLine": 118,
+            "summary": "node-fetch 2.7.0 URL includes api_key, and health.tmdbError echoes error.message.",
+            "title": "Raw upstream error might disclose query API key"
+          }
+        ],
+        "source": "local_plugin"
+      },
+      "remediation": "Do not fetch upstream for public health and never expose or log raw exceptions from credential-bearing URLs.",
+      "remediationTests": [],
+      "rootCause": {
+        "evidenceRefs": [
+          "keyed-health-url",
+          "public-error"
+        ],
+        "summary": "The health fetch URL contains the server API key. Its catch block copies error.message into the public response; node-fetch 2.7.0 includes request.url in network failure messages."
+      },
+      "ruleId": "proxy-health-error-secret",
+      "severity": {
+        "level": "medium"
+      },
+      "summary": "The health fetch URL contains the server API key. Its catch block copies error.message into the public response; node-fetch 2.7.0 includes request.url in network failure messages.",
+      "taxonomy": {
+        "category": "proxy-health-error-secret",
+        "cwe": [
+          "CWE-209"
+        ]
+      },
+      "title": "Network-failure health responses disclose the TMDB API key",
+      "validation": {
+        "evidenceRefs": [
+          "keyed-health-url",
+          "public-error"
+        ],
+        "limitations": [
+          "Disclosure requires an upstream DNS/TLS/socket failure, not an ordinary HTTP error or necessarily an abort. An arbitrary caller cannot force that fixed-host failure.",
+          "Dependency formatting verified in official node-fetch v2.7.0 src/index.js lines 113\u2013114: https://github.com/node-fetch/node-fetch/blob/v2.7.0/src/index.js#L113-L114. No live deployment probed."
+        ],
+        "method": "static source trace",
+        "summary": "During an upstream network failure, a remote health requester can receive an error string containing the operator key as api_key in the request URL."
+      }
+    },
+    {
+      "attackPath": {
+        "dataflow": {
+          "evidenceRefs": [
+            "watched-source",
+            "watched-html"
+          ],
+          "summary": "Catalog title/director fields enter watchedItems and are interpolated into innerHTML in the options page, allowing persistent markup and style injection."
+        },
+        "reachability": {
+          "attacker": "A crafted catalog result saved as watched is rendered as markup on the next options-page view.",
+          "summary": "A malicious metadata source or configured proxy must supply the data and the user must mark the result as watched. Manifest V3 CSP prevents ordinary inline JavaScript. Demonstrated impact is UI spoofing/markup injection and possible remote image requests, not unrestricted extension execution."
+        },
+        "summary": "A crafted catalog result saved as watched is rendered as markup on the next options-page view."
+      },
+      "codeEvidence": [
+        {
+          "code": "function renderWatchedItems(type) {\n  chrome.storage.sync.get(['watchedItems', 'userAccount'], (store) => {\n    const watchedItems = store.watchedItems || [];\n    const userAccount = store.userAccount;\n    \n    // Filter by type and user\n    const filtered = watchedItems.filter(item => {\n      if (item.type !== type) return false;\n      // If user is signed in, only show their items\n      if (userAccount && userAccount.email) {\n        return item.userEmail === userAccount.email;\n      }\n      // If not signed in, show all items (local only)\n      return !item.userEmail;\n    });\n    ",
+          "endLine": 420,
+          "explanation": "The options renderer reads saved watchedItems.",
+          "id": "watched-source",
+          "label": "Watched source",
+          "language": "javascript",
+          "path": "Spolier blocker v1/Spolier blocker Cursor new/options.js",
+          "role": "propagation",
+          "startLine": 405
+        },
+        {
+          "code": "    filtered.forEach(item => {\n      const div = document.createElement('div');\n      div.className = 'watched-item';\n      div.innerHTML = `\n        <div class=\"watched-item-title\">${item.title}</div>\n        <div class=\"watched-item-meta\">${item.year || ''} ${item.director ? '\u2022 ' + item.director : ''}</div>\n        <button class=\"remove-watched\" data-id=\"${item.id}\">Remove</button>\n      `;\n      \n      div.querySelector('.remove-watched').addEventListener('click', () => {\n        removeWatchedItem(item.id);\n      });\n      \n      container.appendChild(div);",
+          "endLine": 442,
+          "explanation": "Raw catalog fields are interpolated into HTML instead of inserted as text.",
+          "id": "watched-html",
+          "label": "Watched html",
+          "language": "javascript",
+          "path": "Spolier blocker v1/Spolier blocker Cursor new/options.js",
+          "role": "root_control",
+          "startLine": 429
+        }
+      ],
+      "confidence": {
+        "level": "high",
+        "rationale": "Source-to-sink trace with explicit deployment prerequisites and counterevidence."
+      },
+      "findingId": "csf_8f3c4fa4cd3db7479a61d2a5",
+      "fingerprints": {
+        "algorithm": "codex-security/v1",
+        "primary": "codex-security/v1:sha256:1945939e9216731ea981d51a81053692162ad6b6a4f2a5a67906e5ff39236283"
+      },
+      "identity": {
+        "anchor": "watched-item-metadata-is-interpreted-as-extension-page-html"
+      },
+      "locations": [
+        {
+          "endLine": 420,
+          "path": "Spolier blocker v1/Spolier blocker Cursor new/options.js",
+          "role": "propagation",
+          "startLine": 405
+        },
+        {
+          "endLine": 442,
+          "path": "Spolier blocker v1/Spolier blocker Cursor new/options.js",
+          "role": "root_control",
+          "startLine": 429
+        }
+      ],
+      "occurrenceId": "occ_a6da87999baaadacdeac68f2",
+      "provenance": {
+        "candidateId": "watched-metadata-html",
+        "originalCandidates": [
+          {
+            "endLine": 435,
+            "path": "Spolier blocker v1.5/Spolier blocker Cursor new/options.js",
+            "startLine": 432,
+            "summary": "TMDB metadata -> markAsWatched -> template innerHTML. CSP limits to markup injection/UI spoofing, not JavaScript execution.",
+            "title": "Watched-list HTML injection"
+          }
+        ],
+        "source": "local_plugin"
+      },
+      "remediation": "Construct elements with createElement and textContent and bind actions using closures rather than interpolated attributes.",
+      "remediationTests": [],
+      "rootCause": {
+        "evidenceRefs": [
+          "watched-source",
+          "watched-html"
+        ],
+        "summary": "Catalog title/director fields enter watchedItems and are interpolated into innerHTML in the options page, allowing persistent markup and style injection."
+      },
+      "ruleId": "watched-metadata-html",
+      "severity": {
+        "level": "low"
+      },
+      "summary": "Catalog title/director fields enter watchedItems and are interpolated into innerHTML in the options page, allowing persistent markup and style injection.",
+      "taxonomy": {
+        "category": "watched-metadata-html",
+        "cwe": [
+          "CWE-79"
+        ]
+      },
+      "title": "Watched-item metadata is interpreted as extension-page HTML",
+      "validation": {
+        "evidenceRefs": [
+          "watched-source",
+          "watched-html"
+        ],
+        "limitations": [
+          "A malicious metadata source or configured proxy must supply the data and the user must mark the result as watched.",
+          "Manifest V3 CSP prevents ordinary inline JavaScript. Demonstrated impact is UI spoofing/markup injection and possible remote image requests, not unrestricted extension execution."
+        ],
+        "method": "static source trace",
+        "summary": "A crafted catalog result saved as watched is rendered as markup on the next options-page view."
+      }
+    },
+    {
+      "attackPath": {
+        "dataflow": {
+          "evidenceRefs": [
+            "overlay-trigger",
+            "watchlist-cache"
+          ],
+          "summary": "A content script reads selectedMedia from extension storage and writes all titles into page-origin sessionStorage.__spoilerSelectedTitles during overlay creation."
+        },
+        "reachability": {
+          "attacker": "A publisher waits for an overlay and reads the page sessionStorage key to learn unrelated protected titles, beyond the local matching block.",
+          "summary": "Requires a matching media overlay; showOverlay defaults enabled. A visited website can read its own sessionStorage. Applies to v1.1, v1.2 and v1.3 content implementations. Newer V4-only implementations do not call this helper."
+        },
+        "summary": "A publisher waits for an overlay and reads the page sessionStorage key to learn unrelated protected titles, beyond the local matching block."
+      },
+      "codeEvidence": [
+        {
+          "code": "function addOverlay(hostEl, why) {\n  try {\n    const container = hostEl.closest('[data-spoiler-shield=\"1\"]') || hostEl;\n    if (!container || container.querySelector('.spoiler-shield-overlay')) return;\n    const label = document.createElement('span');\n    label.className = 'spoiler-shield-overlay';\n    let reason = why || '';\n    const from = collectMatchedTitles();\n    const titleText = from.length ? ` for ${from.slice(0,3).join(', ')}${from.length>3?'\u2026':''}` : '';\n    label.textContent = reason ? `Blocked: ${reason}${titleText}` : (from.length ? `Blocked${titleText}` : 'Blocked by Spoiler Shield');\n    container.appendChild(label);\n  } catch {}",
+          "endLine": 489,
+          "explanation": "A matching media overlay invokes the title-list helper.",
+          "id": "overlay-trigger",
+          "label": "Overlay trigger",
+          "language": "javascript",
+          "path": "Spolier blocker v1.1/Spolier blocker Cursor new/content.js",
+          "role": "entrypoint",
+          "startLine": 478
+        },
+        {
+          "code": "function collectMatchedTitles() {\n  try {\n    const titles = [];\n    const items = JSON.parse(sessionStorage.getItem('__spoilerSelectedTitles') || 'null');\n    if (Array.isArray(items)) return items;\n    // fallback read from storage once per page\n    chrome.storage.sync.get({ selectedMedia: [] }, store => {\n      const arr = (store.selectedMedia || []).map(i => i.title).filter(Boolean);\n      sessionStorage.setItem('__spoilerSelectedTitles', JSON.stringify(arr));\n    });\n    return titles;\n  } catch { return []; }\n}",
+          "endLine": 504,
+          "explanation": "The complete private selection crosses from extension storage into webpage-readable session storage.",
+          "id": "watchlist-cache",
+          "label": "Watchlist cache",
+          "language": "javascript",
+          "path": "Spolier blocker v1.1/Spolier blocker Cursor new/content.js",
+          "role": "root_control",
+          "startLine": 492
+        }
+      ],
+      "confidence": {
+        "level": "high",
+        "rationale": "Source-to-sink trace with explicit deployment prerequisites and counterevidence."
+      },
+      "findingId": "csf_8aef36200304d8baa1dda285",
+      "fingerprints": {
+        "algorithm": "codex-security/v1",
+        "primary": "codex-security/v1:sha256:e9019145c1ff6293d817dbf91aa5b7114cddf3a12999c5614b9252b79e990754"
+      },
+      "identity": {
+        "anchor": "legacy-media-overlays-expose-the-watchlist-to-webpage-scripts"
+      },
+      "locations": [
+        {
+          "endLine": 489,
+          "path": "Spolier blocker v1.1/Spolier blocker Cursor new/content.js",
+          "role": "entrypoint",
+          "startLine": 478
+        },
+        {
+          "endLine": 504,
+          "path": "Spolier blocker v1.1/Spolier blocker Cursor new/content.js",
+          "role": "root_control",
+          "startLine": 492
+        }
+      ],
+      "occurrenceId": "occ_c0f7f179d7a02221dc4e00a7",
+      "provenance": {
+        "candidateId": "page-readable-watchlist",
+        "source": "local_plugin"
+      },
+      "remediation": "Keep watchlists in the isolated extension context. Remove page-origin caches and use generic reveal labels.",
+      "remediationTests": [],
+      "rootCause": {
+        "evidenceRefs": [
+          "overlay-trigger",
+          "watchlist-cache"
+        ],
+        "summary": "A content script reads selectedMedia from extension storage and writes all titles into page-origin sessionStorage.__spoilerSelectedTitles during overlay creation."
+      },
+      "ruleId": "page-readable-watchlist",
+      "severity": {
+        "level": "medium"
+      },
+      "summary": "A content script reads selectedMedia from extension storage and writes all titles into page-origin sessionStorage.__spoilerSelectedTitles during overlay creation.",
+      "taxonomy": {
+        "category": "page-readable-watchlist",
+        "cwe": [
+          "CWE-200"
+        ]
+      },
+      "title": "Legacy media overlays expose the watchlist to webpage scripts",
+      "validation": {
+        "evidenceRefs": [
+          "overlay-trigger",
+          "watchlist-cache"
+        ],
+        "limitations": [
+          "Requires a matching media overlay; showOverlay defaults enabled. A visited website can read its own sessionStorage.",
+          "Applies to v1.1, v1.2 and v1.3 content implementations. Newer V4-only implementations do not call this helper."
+        ],
+        "method": "static source trace",
+        "summary": "A publisher waits for an overlay and reads the page sessionStorage key to learn unrelated protected titles, beyond the local matching block."
+      }
+    },
+    {
+      "attackPath": {
+        "dataflow": {
+          "evidenceRefs": [
+            "backup-import",
+            "css-interpolation"
+          ],
+          "summary": "The reachable v1.1 import handler writes unvalidated JSON into extension storage. Imported color and radius fields are subsequently interpolated into a stylesheet on enabled websites."
+        },
+        "reachability": {
+          "attacker": "An attacker supplies a settings backup containing stylesheet syntax in a color field; after import that syntax is inserted into visited pages.",
+          "summary": "Requires a user-selected malicious backup and a protected page with an active phrase. Impact is CSS/UI manipulation and possible resource requests, not demonstrated JavaScript execution or arbitrary secret extraction. Page CSP can limit styles. Later options implementations have different shadowed import functions and broken handler registration; the finding is restricted to the demonstrated v1.1 path."
+        },
+        "summary": "An attacker supplies a settings backup containing stylesheet syntax in a color field; after import that syntax is inserted into visited pages."
+      },
+      "codeEvidence": [
+        {
+          "code": "function importSettings() {\n  const input = document.getElementById('importFile');\n  const file = input && input.files && input.files[0];\n  if (!file) return;\n\n  const reader = new FileReader();\n  reader.onload = () => {\n    try {\n      const data = JSON.parse(String(reader.result || '{}'));\n      chrome.storage.sync.set(data, () => {\n        const status = document.getElementById('status');\n        status.textContent = 'Imported';\n        status.className = 'status';",
+          "endLine": 955,
+          "explanation": "User-selected JSON is accepted without schema validation.",
+          "id": "backup-import",
+          "label": "Backup import",
+          "language": "javascript",
+          "path": "Spolier blocker v1.1/Spolier blocker Cursor new/options.js",
+          "role": "entrypoint",
+          "startLine": 943
+        },
+        {
+          "code": "function installStyles(store) {\n  const existing = document.querySelector('style[data-spoiler-shield-style]');\n  if (existing) existing.remove();\n\n  const radius = (store.settings && store.settings.blurRadiusPx) ?? 6;\n  const blurStyle = (store.settings && store.settings.blurStyle) || 'gaussian';\n  const overlayBg = (store.settings && store.settings.overlayColor) || '#0b1020';\n  const overlayText = (store.settings && store.settings.overlayTextColor) || '#e7ecff';\n\n  const style = document.createElement('style');\n  style.setAttribute('data-spoiler-shield-style', '');\n\n  // Note: true pixelation requires canvas/SVG filters; we approximate with blur + contrast.\n  const filterCss =\n    blurStyle === 'gaussian'\n      ? `filter: blur(${radius}px);`\n      : blurStyle === 'pixelate'\n        ? `filter: blur(${Math.max(1, Math.round(radius / 2))}px) contrast(1.2);`\n        : `filter: none; opacity: .08; color: transparent; text-shadow: 0 0 12px currentColor;`;\n\n  style.textContent = `\n    .spoiler-shield-blur{${filterCss}transition:filter .15s ease}\n    .spoiler-shield-revealed{filter:none!important; opacity:1!important; color:inherit!important; text-shadow:none!important}\n    .spoiler-shield-wrapper{position:relative; display:inline-block}\n    .spoiler-shield-overlay{position:absolute; inset:auto 6px 6px auto; background:${overlayBg}; color:${overlayText}; font:600 11px/1.2 system-ui, -apple-system, Segoe UI, Roboto, Arial; padding:4px 6px; border-radius:6px; pointer-events:none; opacity:.95; max-width:260px}\n  `;\n  document.documentElement.appendChild(style);",
+          "endLine": 163,
+          "explanation": "Imported values become stylesheet syntax on visited pages.",
+          "id": "css-interpolation",
+          "label": "Css interpolation",
+          "language": "javascript",
+          "path": "Spolier blocker v1.1/Spolier blocker Cursor new/content.js",
+          "role": "root_control",
+          "startLine": 137
+        }
+      ],
+      "confidence": {
+        "level": "high",
+        "rationale": "Source-to-sink trace with explicit deployment prerequisites and counterevidence."
+      },
+      "findingId": "csf_c5bee4cbe15b3b01682ecbb1",
+      "fingerprints": {
+        "algorithm": "codex-security/v1",
+        "primary": "codex-security/v1:sha256:b8a30a42190d1ae4730048a252fccce7cf502284f9e541391ff9aa4f18462c5f"
+      },
+      "identity": {
+        "anchor": "a-legacy-settings-backup-can-inject-persistent-page-css"
+      },
+      "locations": [
+        {
+          "endLine": 955,
+          "path": "Spolier blocker v1.1/Spolier blocker Cursor new/options.js",
+          "role": "entrypoint",
+          "startLine": 943
+        },
+        {
+          "endLine": 163,
+          "path": "Spolier blocker v1.1/Spolier blocker Cursor new/content.js",
+          "role": "root_control",
+          "startLine": 137
+        }
+      ],
+      "occurrenceId": "occ_476b2423fa7407928901b5a7",
+      "provenance": {
+        "candidateId": "legacy-import-css",
+        "source": "local_plugin"
+      },
+      "remediation": "Allowlist imported preference fields, require literal hex colors, clamp numeric values and bound file size; never import account or network configuration.",
+      "remediationTests": [],
+      "rootCause": {
+        "evidenceRefs": [
+          "backup-import",
+          "css-interpolation"
+        ],
+        "summary": "The reachable v1.1 import handler writes unvalidated JSON into extension storage. Imported color and radius fields are subsequently interpolated into a stylesheet on enabled websites."
+      },
+      "ruleId": "legacy-import-css",
+      "severity": {
+        "level": "low"
+      },
+      "summary": "The reachable v1.1 import handler writes unvalidated JSON into extension storage. Imported color and radius fields are subsequently interpolated into a stylesheet on enabled websites.",
+      "taxonomy": {
+        "category": "legacy-import-css",
+        "cwe": [
+          "CWE-74"
+        ]
+      },
+      "title": "A legacy settings backup can inject persistent page CSS",
+      "validation": {
+        "evidenceRefs": [
+          "backup-import",
+          "css-interpolation"
+        ],
+        "limitations": [
+          "Requires a user-selected malicious backup and a protected page with an active phrase.",
+          "Impact is CSS/UI manipulation and possible resource requests, not demonstrated JavaScript execution or arbitrary secret extraction. Page CSP can limit styles.",
+          "Later options implementations have different shadowed import functions and broken handler registration; the finding is restricted to the demonstrated v1.1 path."
+        ],
+        "method": "static source trace",
+        "summary": "An attacker supplies a settings backup containing stylesheet syntax in a color field; after import that syntax is inserted into visited pages."
+      }
+    }
+  ],
+  "scanId": "f03116a8-2771-49df-9abd-ed95925cf020",
+  "schemaVersion": "1.0"
+}
