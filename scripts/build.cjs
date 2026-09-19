@@ -6,7 +6,7 @@ const path = require('node:path');
 const crypto = require('node:crypto');
 const source = path.resolve(__dirname, '..', 'extension');
 const out = path.resolve(__dirname, '..', 'dist');
-const files = ['manifest.json', 'background.js', 'core.js', 'packs.js', 'content.js', 'content.css',
+const files = ['manifest.json', 'background.js', 'core.js', 'packs.js', 'content.js', 'content.css', 'accounts.js', 'account-config.js',
   'v4-knowledge-engine.js', 'v4-spoiler-detector.js', 'popup.html', 'popup.js', 'options.html', 'options.js', 'privacy.html', 'ui.css', 'tmdb-logo.svg', 'icon16.png', 'icon48.png', 'icon128.png'];
 function crc32(data) {
   let crc = 0xffffffff;
@@ -16,7 +16,15 @@ function crc32(data) {
 let offset = 0;
 const chunks = [], directory = [];
 for (const file of files.sort()) {
-  const name = Buffer.from(file), bytes = fs.readFileSync(path.join(source, file));
+  const name = Buffer.from(file);
+  let bytes = fs.readFileSync(path.join(source, file));
+  if (!file.endsWith('.png')) bytes = Buffer.from(bytes.toString('utf8').replace(/\r\n/g, '\n'));
+  if (process.env.ACCOUNT_ORIGIN) {
+    const url = new URL(process.env.ACCOUNT_ORIGIN);
+    if (url.origin !== process.env.ACCOUNT_ORIGIN || (url.protocol !== 'https:' && !(url.protocol === 'http:' && url.hostname === '127.0.0.1'))) throw Error('ACCOUNT_ORIGIN must be an HTTPS origin (or http://127.0.0.1:PORT for development).');
+    if (file === 'account-config.js') bytes = Buffer.from('globalThis.SpoilerAccount = Object.freeze(' + JSON.stringify({ origin: url.origin }) + ');\n');
+    if (file === 'manifest.json') { const manifest = JSON.parse(bytes); manifest.optional_host_permissions.push(url.origin + '/*'); bytes = Buffer.from(JSON.stringify(manifest, null, 2) + '\n'); }
+  }
   const crc = crc32(bytes);
   const header = Buffer.alloc(30);
   header.writeUInt32LE(0x04034b50); header.writeUInt16LE(20, 4); header.writeUInt16LE(33, 12);

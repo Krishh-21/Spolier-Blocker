@@ -3,7 +3,7 @@
   const VERSION = 2;
   const LIMITS = Object.freeze({ keywords: 2000, media: 200, phrases: 120, term: 160, bytes: 1000000 });
   const defaults = Object.freeze({ enabled: true, mode: 'balanced', presentation: 'cover', blurRadiusPx: 18,
-    blurImages: true, revealOnHover: false, reblurAfterMs: 0, includeDomains: [], excludeDomains: [], perSite: {} });
+    blurImages: true, revealOnHover: false, showReveal: false, previewOnYouTube: true, protectYouTube: true, reblurAfterMs: 0, includeDomains: [], excludeDomains: [], perSite: {} });
   const object = x => x !== null && typeof x === 'object' && !Array.isArray(x);
   const normalize = x => String(x ?? '').normalize('NFKC').replace(/[\u200B-\u200D\u2060\uFEFF]/g, '').toLocaleLowerCase('en-US')
     .replace(/[’‘]/g, "'").replace(/[\p{P}\p{Z}\s]+/gu, ' ').trim();
@@ -26,6 +26,7 @@
   function domainMatches(host, rule) { return host === rule || host.endsWith('.' + rule); }
   function enabled(settings, hostname) {
     const host = domain(hostname);
+    if (settings.protectYouTube === false && (domainMatches(host, 'youtube.com') || domainMatches(host, 'youtu.be'))) return false;
     if (!host || !settings.enabled || settings.excludeDomains.some(d => domainMatches(host, d))) return false;
     if (Object.hasOwn(settings.perSite, host)) return settings.perSite[host];
     return !settings.includeDomains.length || settings.includeDomains.some(d => domainMatches(host, d));
@@ -34,9 +35,9 @@
     const data = object(input) ? input : {};
     const raw = object(data.settings) ? data.settings : {};
     const settings = { ...defaults, perSite: Object.create(null) };
-    for (const key of ['enabled', 'blurImages', 'revealOnHover']) if (typeof raw[key] === 'boolean') settings[key] = raw[key];
+    for (const key of ['enabled', 'blurImages', 'revealOnHover', 'showReveal', 'previewOnYouTube', 'protectYouTube']) if (typeof raw[key] === 'boolean') settings[key] = raw[key];
     if (['balanced', 'strict'].includes(raw.mode)) settings.mode = raw.mode;
-    if (['cover', 'blur'].includes(raw.presentation)) settings.presentation = raw.presentation;
+    if (['cover', 'blur', 'motion', 'pixelated'].includes(raw.presentation)) settings.presentation = raw.presentation;
     for (const [key, min, max] of [['blurRadiusPx', 8, 40], ['reblurAfterMs', 0, 300000]]) {
       if (Number.isFinite(raw[key])) settings[key] = Math.max(min, Math.min(max, Math.round(raw[key])));
     }

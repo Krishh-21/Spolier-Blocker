@@ -23,6 +23,22 @@ async function pageWith(html, config = { customKeywords: ['Mira Vale'] }) {
   await page.goto('https://fixture.example/');
   return page;
 }
+async function shadowNodes(page) {
+  const client = await context.newCDPSession(page);
+  const { root } = await client.send('DOM.getDocument', { depth: -1, pierce: true });
+  const nodes = [];
+  function visit(node) { nodes.push(node); for (const child of [...(node.children || []), ...(node.shadowRoots || [])]) visit(child); }
+  visit(root); return { client, nodes };
+}
+async function clickShadowButton(page, label) {
+  const { client, nodes } = await shadowNodes(page);
+  try {
+    const node = nodes.find(n => n.nodeName === 'BUTTON' && n.children?.some(c => c.nodeValue.includes(label)));
+    expect(node, 'Closed-shadow button: ' + label).toBeTruthy();
+    const { model } = await client.send('DOM.getBoxModel', { nodeId: node.nodeId });
+    await page.mouse.click((model.content[0] + model.content[4]) / 2, (model.content[1] + model.content[5]) / 2);
+  } finally { await client.detach(); }
+}
 test('covers custom keywords, preserves page DOM, restores and stays disabled', async () => {
   const page = await pageWith('<article id="post"><a href="/next">Mira Vale dies</a><img alt="portrait"></article><p id="safe">A normal post</p>');
   await expect(page.locator('#post')).toHaveClass(/ss2-covered/);
@@ -81,16 +97,59 @@ test('renders untrusted titles as text; saves settings and previews backup impor
   await page.close();
 });
 test('reveal is deliberate, does not navigate links, re-hides and protects recycled cards', async () => {
-  const page = await pageWith('<article id="post"><a href="/next">Mira Vale dies</a></article>', { customKeywords: ['Mira Vale'], settings: { reblurAfterMs: 1000 } });
+  const page = await pageWith('<article id="post"><a href="/next">Mira Vale dies</a></article>', { customKeywords: ['Mira Vale'], settings: { reblurAfterMs: 1000, showReveal: true } });
   await expect(page.locator('#post')).toHaveClass(/ss2-covered/);
   await expect(page.locator('#post')).toHaveAttribute('aria-hidden', 'true');
-  await page.locator('.ss2-control').click();
+  await clickShadowButton(page, 'Spoiler hidden');
   await expect(page.locator('#post')).not.toHaveClass(/ss2-covered/);
   expect(page.url()).toBe('https://fixture.example/');
   await expect(page.locator('#post')).toHaveClass(/ss2-covered/, { timeout: 3000 });
-  await page.locator('.ss2-control').click();
+  await clickShadowButton(page, 'Spoiler hidden');
   await page.locator('#post').evaluate(el => { el.textContent = 'Mira Vale new spoiler'; });
   await expect(page.locator('#post')).toHaveClass(/ss2-covered/);
+  await page.close();
+});
+
+test('preview is opt-in, keeps original hidden, and works on YouTube with a separate switch', async () => {
+  const page = await context.newPage();
+  await page.route('https://www.youtube.com/**', route => route.fulfill({ contentType: 'text/html', body: '<article id="post">Mira Vale secret</article>' }));
+  await configure({ customKeywords: ['Mira Vale'] }); await page.goto('https://www.youtube.com/');
+  await expect(page.locator('#post')).toHaveClass(/ss2-covered/);
+  let tree = await shadowNodes(page);
+  expect(tree.nodes.filter(n => n.nodeName === 'BUTTON').every(n => n.attributes.includes('hidden'))).toBe(true); await tree.client.detach();
+  await configure({ customKeywords: ['Mira Vale'], settings: { showReveal: true } });
+  await expect.poll(async () => { const t = await shadowNodes(page); const found = t.nodes.some(n => n.nodeName === 'BUTTON' && n.children?.some(c => c.nodeValue === 'Preview')); await t.client.detach(); return found; }).toBe(true);
+  await clickShadowButton(page, 'Preview');
+  await expect(page.locator('#post')).toHaveClass(/ss2-covered/);
+  await expect.poll(async () => { const t = await shadowNodes(page); const open = t.nodes.some(n => n.nodeName === 'DIALOG' && n.attributes.includes('open')); await t.client.detach(); return open; }).toBe(true);
+  await clickShadowButton(page, 'Close preview');
+  await configure({ customKeywords: ['Mira Vale'], settings: { showReveal: true, previewOnYouTube: false } });
+  await expect.poll(async () => { const t = await shadowNodes(page); const found = t.nodes.some(n => n.nodeName === 'BUTTON' && n.children?.some(c => c.nodeValue === 'Preview')); await t.client.detach(); return found; }).toBe(false);
+  await configure({ customKeywords: ['Mira Vale'], settings: { protectYouTube: false } });
+  await expect(page.locator('#post')).not.toHaveClass(/ss2-covered/); await page.close();
+});
+
+test('all four concealment styles apply and restore page state', async () => {
+  for (const [presentation, className] of [['cover', 'ss2-covered'], ['pixelated', 'ss2-covered'], ['blur', 'ss2-blurred'], ['motion', 'ss2-motion']]) {
+    const page = await pageWith('<p id="post">Mira Vale secret</p>', { customKeywords: ['Mira Vale'], settings: { presentation } });
+    await expect(page.locator('#post')).toHaveClass(new RegExp(className));
+    expect(await page.locator('#post').evaluate(el => el.inert)).toBe(true);
+    if (presentation === 'motion') await expect(page.locator('#ss2-motion-filter')).toHaveCount(1);
+    await configure({ settings: { enabled: false } });
+    await expect(page.locator('#post')).not.toHaveClass(/ss2-/);
+    expect(await page.locator('#post').evaluate(el => el.inert)).toBe(false);
+    await page.close();
+  }
+});
+
+test('title suggestions populate aliases and Free quota reports a useful error', async () => {
+  await configure({}); const page = await context.newPage();
+  await page.goto(`chrome-extension://${extensionId}/options.html`);
+  await expect(page.locator('#save')).toBeEnabled();
+  await page.locator('#newTitle').fill('Elden Ring');
+  expect(await page.locator('#newAliases').inputValue()).toContain('Malenia');
+  await page.locator('#keywords').fill('one\ntwo\nthree'); await page.locator('#save').click();
+  await expect(page.locator('#status')).toContainText('allows 2');
   await page.close();
 });
 test('each iframe runs protection and per-site exclusions do not match lookalikes', async () => {

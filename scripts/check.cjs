@@ -19,4 +19,9 @@ for (const script of manifest.content_scripts.flatMap(x => [...x.js, ...x.css]))
   if (!fs.existsSync(path.join(root, script))) throw new Error('Missing content asset: ' + script);
 }
 if (manifest.externally_connectable || manifest.oauth2 || manifest.web_accessible_resources) throw new Error('Unexpected public extension surface');
+for (const folder of ['website', 'server', 'scripts']) {
+  for (const file of fs.readdirSync(path.join(root, '..', folder))) {
+    if (/\.(?:js|cjs)$/.test(file)) new vm.Script(fs.readFileSync(path.join(root, '..', folder, file), 'utf8'), { filename: `${folder}/${file}` });
+  }
+}
 console.log('Extension syntax, manifest, version and asset checks passed.');

@@ -5,7 +5,7 @@ Release candidate prepared September 19, 2026. Canonical source: `extension/`; p
 ## Changes
 
 - Rebuilt popup/settings around selecting topics, deliberate reveal and clear protection controls.
-- Added 11 optional topic packs, strict/balanced matching, Unicode-safe literal keywords, local aliases and exact-text exceptions.
+- Added 14 optional topic packs, strict/balanced matching, Unicode-safe literal keywords, local aliases and exact-text exceptions.
 - Corrected independent keyword matching, common-word false positives, mutable shared knowledge arrays and dynamic-page rescanning.
 - Kept page DOM structure intact, restored visibility/accessibility state on disable, protected lazy labels and frames, and preserved inline reply editors.
 - Restricted storage, removed account/token messaging and shared-proxy dependence, bounded imports/network responses and removed unsafe HTML rendering.
@@ -32,3 +32,11 @@ Before publishing:
 - Review Chrome Web Store permission/privacy disclosures and screenshots, then upload only the new `dist/spoiler-shield-2.0.0.zip`. Existing root ZIPs are unpatched historical artifacts.
 
 This change creates a reviewable release candidate and pull request. It does not publish a store release, deploy a proxy, merge the branch, or claim all internet spoilers can be blocked.
+
+## Additional 2.0.0 work (same version)
+
+Search inputs now provide title/keyword dropdowns, and TMDB lookup has debounced suggestions. Reveal buttons default off; opting in enables deliberate text-preview popups without exposing the underlying page. YouTube protection and previews have separate toggles. Added motion blur, Gaussian blur, solid masks and an opaque pixelated mask, plus three game packs.
+
+A responsive promotional website and real Node/SQLite account/admin service are included. Admin-configurable literal-keyword quotas default to Free 2, Premium 10, Max no tier quota (device safety capacity remains). Optional account upload/download uses revision checks and excludes credentials. Existing local protection is preserved on plan downgrades. The default release has no service origin until configured for deployment; `npm run dev` produces a complete local connected preview. No paid checkout is enabled. See [deployment](ACCOUNTS_AND_DEPLOYMENT.md) and [streaming/pricing proposals](STREAMING_AND_PRICING.md).
+
+Follow-up validation: 32 Node tests, 12 Chromium browser tests and one actual Express integration test passed locally. The account integration test pre-grants only the test service's host permission because native permission prompts cannot be accepted in headless Chromium; the production UI still requests permission from a direct user action. Website desktop/mobile screenshots were inspected and the mobile document has no horizontal overflow.

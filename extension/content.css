@@ -2,4 +2,6 @@
 .ss2-covered { visibility: hidden !important; }
 .ss2-covered * { visibility: hidden !important; }
 .ss2-blurred { filter: blur(var(--ss2-radius, 18px)) !important; user-select: none !important; pointer-events: none !important; }
-.ss2-control { all: initial !important; position: fixed !important; z-index: 2147483647 !important; }
+.ss2-control { all: initial !important; pointer-events: none !important; position: fixed !important; z-index: 2147483647 !important; }
+
+.ss2-motion { filter: url("#ss2-motion-filter") !important; user-select:none !important; pointer-events:none !important; }

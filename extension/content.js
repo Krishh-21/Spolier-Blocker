@@ -54,7 +54,8 @@
     const record = marked.get(el);
     if (!record) return;
     clearTimeout(record.timer);
-    el.classList.remove('ss2-covered', 'ss2-blurred');
+    el.classList.remove('ss2-covered', 'ss2-blurred', 'ss2-motion');
+    if (record.surface) record.surface.hidden = true;
     if (record.aria === null) el.removeAttribute('aria-hidden'); else el.setAttribute('aria-hidden', record.aria);
     el.inert = record.inert;
     if (record.radius) el.style.setProperty('--ss2-radius', record.radius); else el.style.removeProperty('--ss2-radius');
@@ -64,7 +65,8 @@
   function hide(el, record) {
     if (!el.isConnected || !active) return;
     record.revealed = false;
-    el.classList.add(current.settings.presentation === 'blur' ? 'ss2-blurred' : 'ss2-covered');
+    el.classList.add(current.settings.presentation === 'blur' ? 'ss2-blurred' : current.settings.presentation === 'motion' ? 'ss2-motion' : 'ss2-covered');
+    record.surface.hidden = !['cover', 'pixelated'].includes(current.settings.presentation);
     el.setAttribute('aria-hidden', 'true'); el.inert = true;
     record.button.textContent = 'Spoiler hidden · Reveal';
     record.button.setAttribute('aria-label', 'Reveal hidden spoiler');
@@ -72,7 +74,8 @@
   }
   function reveal(el, record) {
     record.revealed = true;
-    el.classList.remove('ss2-covered', 'ss2-blurred');
+    el.classList.remove('ss2-covered', 'ss2-blurred', 'ss2-motion');
+    if (record.surface) record.surface.hidden = true;
     if (record.aria === null) el.removeAttribute('aria-hidden'); else el.setAttribute('aria-hidden', record.aria);
     el.inert = record.inert;
     record.button.textContent = 'Hide again';
@@ -92,14 +95,28 @@
     host.className = 'ss2-control';
     const shadow = host.attachShadow({ mode: 'closed' });
     const style = document.createElement('style');
-    style.textContent = ':host{color-scheme:dark}button{font:600 12px/1.3 system-ui;background:#153c35;color:#fff;border:1px solid #76ddc4;border-radius:8px;padding:8px 12px;cursor:pointer;max-width:240px;box-shadow:0 2px 8px #0006}button:focus-visible{outline:3px solid #ffd36a;outline-offset:2px}';
+    style.textContent = '.surface{position:absolute;inset:0;background:#13251f;border-radius:8px;pointer-events:none}.surface.pixelated{background-color:#172e26;background-image:conic-gradient(#284d3d 25%,#183128 0 50%,#355b48 0 75%,#1c382e 0);background-size:24px 24px}.surface[hidden]{display:none}button{position:relative;pointer-events:auto;margin:4px}:host{color-scheme:dark}button{font:600 12px/1.3 system-ui;background:#153c35;color:#fff;border:1px solid #76ddc4;border-radius:8px;padding:8px 12px;cursor:pointer;max-width:240px;box-shadow:0 2px 8px #0006}button:focus-visible{outline:3px solid #ffd36a;outline-offset:2px}';
     const button = document.createElement('button'); button.type = 'button';
-    shadow.append(style, button); document.documentElement.append(host);
-    const record = { host, button, aria: el.getAttribute('aria-hidden'), inert: el.inert, radius: el.style.getPropertyValue('--ss2-radius'), revealed: false, text, timer: null };
+    const surface = document.createElement('span'); surface.className = 'surface' + (current.settings.presentation === 'pixelated' ? ' pixelated' : ''); surface.setAttribute('aria-hidden', 'true');
+    button.hidden = !current.settings.showReveal;
+    shadow.append(style, surface, button); document.documentElement.append(host);
+    const record = { host, button, surface, aria: el.getAttribute('aria-hidden'), inert: el.inert, radius: el.style.getPropertyValue('--ss2-radius'), revealed: false, text, timer: null };
     marked.set(el, record);
     el.style.setProperty('--ss2-radius', `${current.settings.blurRadiusPx}px`);
     button.addEventListener('click', event => { event.preventDefault(); event.stopPropagation(); record.revealed ? hide(el, record) : reveal(el, record); });
-    if (current.settings.revealOnHover) {
+    const onYouTube = /(^|\.)youtube\.com$/.test(location.hostname);
+    if (current.settings.showReveal && (!onYouTube || current.settings.previewOnYouTube)) {
+      const preview = document.createElement('button'); preview.type = 'button'; preview.textContent = 'Preview';
+      const dialog = document.createElement('dialog'); dialog.setAttribute('aria-label', 'Spoiler preview');
+      dialog.style.cssText = 'position:fixed;inset:10vh auto auto 50%;transform:translateX(-50%);width:min(600px,85vw);max-height:75vh;overflow:auto;background:#14261f;color:#effaf2;padding:24px;border:1px solid #76ddc4;border-radius:16px;font:16px/1.6 system-ui;pointer-events:auto';
+      const heading = document.createElement('h2'); heading.textContent = 'Spoiler preview';
+      const content = document.createElement('p'); content.style.whiteSpace = 'pre-wrap';
+      const close = document.createElement('button'); close.type = 'button'; close.textContent = 'Close preview';
+      close.addEventListener('click', () => dialog.close());
+      dialog.append(heading, content, close); shadow.append(preview, dialog);
+      preview.addEventListener('click', () => { content.textContent = record.text.slice(0, 12000); dialog.showModal(); });
+    }
+    if (current.settings.showReveal && current.settings.revealOnHover) {
       host.addEventListener('mouseenter', () => reveal(el, record));
       host.addEventListener('mouseleave', () => hide(el, record));
     }
@@ -163,14 +180,17 @@
         const visible = el.isConnected && rect.width && rect.height && rect.bottom > 0 && rect.top < innerHeight && rect.right > 0 && rect.left < innerWidth;
         record.host.style.setProperty('display', visible ? 'block' : 'none', 'important');
         if (visible) {
-          record.host.style.setProperty('left', `${Math.max(0, Math.min(rect.left, innerWidth - 160))}px`, 'important');
-          record.host.style.setProperty('top', `${Math.max(0, rect.top)}px`, 'important');
+          record.host.style.setProperty('width', `${rect.width}px`, 'important');
+          record.host.style.setProperty('height', `${rect.height}px`, 'important');
+          record.host.style.setProperty('left', `${rect.left}px`, 'important');
+          record.host.style.setProperty('top', `${rect.top}px`, 'important');
         }
       }
     });
   }
   function stop() {
     active = false;
+    document.getElementById('ss2-motion-filter')?.parentElement?.remove();
     observer?.disconnect(); observer = null;
     clearTimeout(timer); timer = null;
     clearTimeout(countTimer); pending.clear(); walkers = [];
@@ -187,6 +207,15 @@
     if (!active || ownRevision !== revision) return;
     try { legacy ||= new V4SpoilerDetector(); } catch {}
     detector = C.createDetector(current, legacy);
+    if (current.settings.presentation === 'motion' && !document.getElementById('ss2-motion-filter')) {
+      const ns = 'http://www.w3.org/2000/svg';
+      const svg = document.createElementNS(ns, 'svg'); svg.classList.add('ss2-control');
+      svg.setAttribute('width', '0'); svg.setAttribute('height', '0'); svg.setAttribute('aria-hidden', 'true');
+      const filter = document.createElementNS(ns, 'filter'); filter.id = 'ss2-motion-filter';
+      filter.setAttribute('x', '-50%'); filter.setAttribute('y', '-20%'); filter.setAttribute('width', '200%'); filter.setAttribute('height', '140%');
+      const blur = document.createElementNS(ns, 'feGaussianBlur'); blur.setAttribute('stdDeviation', `${current.settings.blurRadiusPx} 3`);
+      filter.append(blur); svg.append(filter); document.documentElement.append(svg);
+    }
     observer = new MutationObserver(records => {
       for (const record of records) {
         if (record.target.nodeType === Node.ELEMENT_NODE && record.target.closest('.ss2-control')) continue;
@@ -203,7 +232,7 @@
   }
   chrome.runtime.onMessage.addListener((message, _sender, respond) => {
     if (['config-changed', 'rescan'].includes(message?.type)) reload();
-    if (message?.type === 'reveal-all') for (const [el, record] of marked) reveal(el, record);
+    if (message?.type === 'reveal-all' && current?.settings.showReveal) for (const [el, record] of marked) reveal(el, record);
     if (message?.type === 'hide-all') for (const [el, record] of marked) hide(el, record);
     if (message?.type === 'status') { respond({ count: marked.size, active }); return false; }
   });

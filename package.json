@@ -8,8 +8,14 @@
     "test:browser": "playwright test",
     "test:proxy": "node --test tests/proxy-runtime.cjs",
     "check": "node scripts/check.cjs",
-    "build": "node scripts/build.cjs"
+    "build": "node scripts/build.cjs",
+    "start": "node server/app.cjs",
+    "dev": "node scripts/start-local.cjs"
   },
-  "engines": { "node": ">=22" },
-  "devDependencies": { "@playwright/test": "1.63.0" }
+  "engines": {
+    "node": ">=22.20.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.63.0"
+  }
 }

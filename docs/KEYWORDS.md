@@ -1,6 +1,6 @@
 # Keyword coverage and maintenance
 
-The complete shipped pack data is in [extension/packs.js](../extension/packs.js). The generic signal list is in [extension/core.js](../extension/core.js). All 11 packs are opt-in; no list can cover every title, nickname, language or future spoiler.
+The complete shipped pack data is in [extension/packs.js](../extension/packs.js). The generic signal list is in [extension/core.js](../extension/core.js). All 14 packs are opt-in; no list can cover every title, nickname, language or future spoiler.
 
 | Pack | Coverage |
 |---|---|
@@ -27,3 +27,7 @@ Add a manual topic with full character names and distinctive alternative titles.
 For maintained packs, add factual aliases with primary source links, normalize/deduplicate them, test intended matches and common-word false positives, and ship them through a reviewed extension update. Do not add a giant universal list of character first names or automatically enable every franchise. Limits: 200 custom titles, 120 aliases per title, 2,000 custom keywords, 160 characters per term and a 1 MB configuration/backup ceiling.
 
 The bundled legacy knowledge engine contains existing plot-oriented rules internally; “no plot summaries” refers to new pack data and lookup UI, not a claim that the source code itself is spoiler-free.
+
+## Game pack additions in the same 2.0.0 release
+
+Elden Ring (including Shadow of the Erdtree), Baldur’s Gate 3 and The Witcher 3 now have opt-in name/character packs. Reference material: [Bandai Namco's Elden Ring page](https://www.bandainamcoent.com/games/elden-ring/), [Larian's cast listing](https://baldursgate3.game/cast), and [CD Projekt's Witcher 3 page](https://www.thewitcher.com/_next/witcher3). Names are coverage aids, not complete plot databases. These packs cover browser mentions and metadata, not native game rendering or spoken spoilers.

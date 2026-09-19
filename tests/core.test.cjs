@@ -55,3 +55,11 @@ test('malformed arrays are bounded and exact exceptions do not whitelist a topic
   assert.equal(c.customKeywords.length, 2000);
   assert.equal(c.selectedMedia.length, 1);
 });
+
+test('reveal defaults off; YouTube exclusion has a real hostname boundary', () => {
+  const c = C.sanitize({ settings: { protectYouTube: false, presentation: 'motion' } });
+  assert.equal(c.settings.showReveal, false); assert.equal(c.settings.presentation, 'motion');
+  assert.equal(C.enabled(c.settings, 'www.youtube.com'), false);
+  assert.equal(C.enabled(c.settings, 'notyoutube.com'), true);
+  assert.equal(C.sanitize({ settings: { presentation: 'pixelated' } }).settings.presentation, 'pixelated');
+});

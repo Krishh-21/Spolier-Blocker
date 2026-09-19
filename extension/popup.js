@@ -8,6 +8,7 @@ async function call(message) {
   return result;
 }
 function render() {
+  $('reveal').hidden = !state.settings.showReveal;
   $('toggle').textContent = state.settings.enabled ? 'Pause all' : 'Enable';
   $('toggle').disabled = false;
   try {
@@ -41,3 +42,6 @@ $('keywordForm').addEventListener('submit', async event => {
   state = (await call({ type: 'get-config' })).config;
   [tab] = await chrome.tabs.query({ active: true, currentWindow: true }); render(); await updatePageStatus();
 })().catch(e => status(e.message, true));
+
+$('keywordSuggestions').replaceChildren(...SpoilerPacks.flatMap(pack => [pack.title, ...pack.phrases]).map(value => { const option = document.createElement('option'); option.value = value; return option; }));
+call({ type: 'account-status' }).then(({ account }) => { $('planStatus').textContent = `${account.tier.toUpperCase()} · ${account.limit === null ? 'No tier quota' : account.limit + ' custom keyword slots'}`; }).catch(() => {});

@@ -40,7 +40,7 @@ test('content scripts cannot mutate configuration, fetch metadata or obtain cred
   await assert.rejects(h.sandbox.handle({ type: 'get-config' }, { id: 'another-extension' }), /Unsupported/);
 });
 test('concurrent keyword additions are serialized without lost updates', async () => {
-  const h = harness();
+  const h = harness(); h.local.accountSession = { user: { tier: 'max' } };
   await Promise.all(Array.from({ length: 20 }, (_, i) => h.sandbox.handle({ type: 'add-keyword', keyword: 'term ' + i }, h.ui)));
   assert.equal(h.local.config.customKeywords.length, 20);
 });
@@ -80,4 +80,14 @@ test('TMDB lookup returns spoiler-free search labels and stores only title alias
   assert.equal(tracked.config.selectedMedia[0].phrases.includes('Mira Vale'), true);
   assert.equal(JSON.stringify(tracked).includes('SECRET PLOT'), false);
   assert.equal(JSON.stringify(tracked).includes('read-access-token'), false);
+});
+
+test('keyword quotas count entries, preserve existing data, and never trust imported tiers', async () => {
+  const h = harness();
+  await h.sandbox.handle({ type: 'save-config', config: { customKeywords: ['a long phrase', 'another'], tier: 'max' } }, h.ui);
+  await assert.rejects(h.sandbox.handle({ type: 'add-keyword', keyword: 'third' }, h.ui), /allows 2/);
+  h.local.accountPolicy = { free: 1, premium: 10, max: null };
+  await h.sandbox.handle({ type: 'save-config', config: { ...h.local.config, settings: { showReveal: true } } }, h.ui);
+  assert.equal(h.local.config.customKeywords.length, 2);
+  for (const type of ['account-status', 'account-login', 'account-upload', 'account-download']) await assert.rejects(h.sandbox.handle({ type }, h.page), /only available/);
 });

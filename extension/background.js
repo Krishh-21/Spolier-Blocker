@@ -1,5 +1,5 @@
 'use strict';
-importScripts('packs.js', 'core.js');
+importScripts('packs.js', 'core.js', 'account-config.js', 'accounts.js');
 const C = SpoilerCore;
 let initialization;
 let writes = Promise.resolve();
@@ -30,7 +30,9 @@ async function broadcast() {
 }
 function mutate(update) {
   const operation = writes.then(async () => {
-    const next = C.sanitize(await update(await config()));
+    const previous = await config();
+    const next = C.sanitize(await update(C.sanitize(previous)));
+    await enforceKeywordQuota(next, previous);
     if (new TextEncoder().encode(JSON.stringify(next)).length > C.LIMITS.bytes) throw new Error('Settings exceed the 1 MB limit. Remove some titles or keywords.');
     await chrome.storage.local.set({ config: next });
     await broadcast();
@@ -80,6 +82,7 @@ async function handle(message, sender) {
     return {};
   }
   if (!trustedUI(sender)) throw new Error('This action is only available in extension settings.');
+  if (message.type.startsWith('account-')) return accountAction(message);
   switch (message.type) {
     case 'save-config': return { config: await mutate(() => message.config) };
     case 'add-keyword': {

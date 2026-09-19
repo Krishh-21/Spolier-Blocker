@@ -23,7 +23,7 @@ function renderTitles() {
   if (!state.selectedMedia.length) $('titles').textContent = 'No custom titles yet. Choose a pack or add a title below.';
 }
 function render() {
-  for (const key of ['enabled', 'blurImages', 'revealOnHover']) $(key).checked = state.settings[key];
+  for (const key of ['enabled', 'blurImages', 'revealOnHover', 'showReveal', 'previewOnYouTube', 'protectYouTube']) $(key).checked = state.settings[key];
   for (const key of ['mode', 'presentation', 'blurRadiusPx', 'reblurAfterMs']) $(key).value = state.settings[key];
   for (const key of ['includeDomains', 'excludeDomains']) $(key).value = state.settings[key].join('\n');
   $('keywords').value = state.customKeywords.join('\n'); $('exceptions').value = state.falsePositives.join('\n');
@@ -35,10 +35,11 @@ function render() {
     const name = document.createElement('span'); name.textContent = pack.title;
     label.append(input, name); $('packs').append(label);
   }
+  $('titleSuggestions').replaceChildren(...SpoilerPacks.map(pack => { const option = document.createElement('option'); option.value = pack.title; return option; }));
   renderTitles(); $('save').disabled = false;
 }
 function collect() {
-  for (const key of ['enabled', 'blurImages', 'revealOnHover']) state.settings[key] = $(key).checked;
+  for (const key of ['enabled', 'blurImages', 'revealOnHover', 'showReveal', 'previewOnYouTube', 'protectYouTube']) state.settings[key] = $(key).checked;
   for (const key of ['mode', 'presentation']) state.settings[key] = $(key).value;
   for (const key of ['blurRadiusPx', 'reblurAfterMs']) state.settings[key] = Number($(key).value);
   for (const key of ['includeDomains', 'excludeDomains']) {
@@ -82,11 +83,14 @@ on('connect', async () => {
 });
 on('disconnect', async () => { await call({ type: 'save-token', token: '' }); await chrome.permissions.remove({ origins: ['https://api.themoviedb.org/*'] }); $('token').value = ''; await tokenStatus(); status('Lookup disconnected.'); });
 on('search', async () => {
+  const query = $('query').value, requestRevision = ++searchRevision;
   $('search').disabled = true; $('results').replaceChildren(); status('Searching TMDB…');
   try {
-    const result = await call({ type: 'search', query: $('query').value, mediaType: $('mediaType').value });
+    const result = await call({ type: 'search', query, mediaType: $('mediaType').value });
+    if (requestRevision !== searchRevision) return;
+    $('query').setAttribute('aria-expanded', String(result.results.length > 0));
     for (const item of result.results) {
-      const row = document.createElement('div'); row.className = 'item';
+      const row = document.createElement('div'); row.className = 'item'; row.setAttribute('role', 'option');
       const text = document.createElement('span'); text.textContent = `${item.title} ${item.year ? '(' + item.year + ')' : ''}`;
       const button = document.createElement('button'); button.type = 'button'; button.textContent = 'Protect';
       button.addEventListener('click', async () => {
@@ -100,7 +104,7 @@ on('search', async () => {
       row.append(text, button); $('results').append(row);
     }
     status(result.results.length ? 'Choose a title to protect.' : 'No titles found. You can add one manually.');
-  } finally { $('search').disabled = false; }
+  } finally { $('search').disabled = false; if (query !== $('query').value && $('query').value.trim().length >= 2) { clearTimeout(searchTimer); searchTimer = setTimeout(() => $('search').click(), 350); } }
 });
 on('export', async () => {
   const saved = (await call({ type: 'get-config' })).config;
@@ -124,3 +128,55 @@ on('confirmImport', async () => {
   pendingImport = null; $('importPreview').close(); render(); status('Backup imported.');
 });
 (async () => { state = (await call({ type: 'get-config' })).config; render(); await tokenStatus(); status('Ready.'); })().catch(e => status(e.message, true));
+
+let lastSuggestedAliases = '';
+$('newTitle').addEventListener('input', () => {
+  const pack = SpoilerPacks.find(p => C.normalize(p.title) === C.normalize($('newTitle').value));
+  if (pack) { lastSuggestedAliases = pack.phrases.join('\n'); $('newAliases').value = lastSuggestedAliases; }
+  else if ($('newAliases').value === lastSuggestedAliases) { $('newAliases').value = ''; lastSuggestedAliases = ''; }
+});
+let searchTimer, searchRevision = 0;
+$('query').addEventListener('input', () => {
+  searchRevision++;
+  clearTimeout(searchTimer);
+  if ($('query').value.trim().length < 2) { $('results').replaceChildren(); $('query').setAttribute('aria-expanded', 'false'); return; }
+  searchTimer = setTimeout(() => { if (!$('search').disabled) $('search').click(); }, 350);
+});
+$('query').addEventListener('keydown', event => {
+  if (event.key === 'ArrowDown') { event.preventDefault(); $('results').querySelector('button')?.focus(); }
+  if (event.key === 'Escape') { searchRevision++; clearTimeout(searchTimer); $('results').replaceChildren(); $('query').setAttribute('aria-expanded', 'false'); }
+  if (event.key === 'Enter') { event.preventDefault(); clearTimeout(searchTimer); $('search').click(); }
+});
+
+let accountState;
+async function renderAccount(refresh = false) {
+  accountState = (await call({ type: 'account-status', refresh })).account;
+  $('accountStatus').textContent = `${accountState.tier.toUpperCase()} · ${accountState.limit === null ? 'No tier quota for' : accountState.limit} custom keyword entries${accountState.user ? ' · ' + accountState.user.email : ' · Not signed in'}`;
+  $('accountService').textContent = accountState.origin || 'Account service is not configured in this build. The maintainer must configure ACCOUNT_ORIGIN for deployment.';
+  for (const id of ['accountLogin', 'accountRegister', 'accountRefresh']) $(id).disabled = !accountState.origin;
+  for (const id of ['accountLogout', 'accountUpload', 'accountDownload']) $(id).disabled = !accountState.user;
+}
+async function accountPermission() {
+  if (!accountState?.origin) throw Error('Account service is not configured.');
+  if (!await chrome.permissions.request({ origins: [accountState.origin + '/*'] })) throw Error('Account permission was not granted.');
+}
+for (const [id, mode] of [['accountLogin', 'login'], ['accountRegister', 'register']]) on(id, async () => {
+  await accountPermission();
+  $(id).disabled = true;
+  try { await call({ type: 'account-login', mode, email: $('accountEmail').value, password: $('accountPassword').value }); $('accountPassword').value = ''; await renderAccount(); status('Signed in. Choose Upload or Download to sync.'); }
+  finally { $(id).disabled = false; }
+});
+on('accountRefresh', async () => { await accountPermission(); await renderAccount(true); status('Plan refreshed.'); });
+on('accountLogout', async () => { const result = await call({ type: 'account-logout' }); await renderAccount(); status(result.notice || 'Signed out. Local settings preserved.'); });
+on('accountUpload', async () => { await call({ type: 'account-upload' }); await renderAccount(); status('Saved settings uploaded.'); });
+on('accountDownload', () => $('cloudPreview').showModal());
+on('cancelCloud', () => $('cloudPreview').close());
+on('confirmCloud', async () => { state = (await call({ type: 'account-download' })).config; $('cloudPreview').close(); render(); await renderAccount(); status('Cloud settings downloaded.'); });
+renderAccount().then(async () => { if (accountState.origin && await chrome.permissions.contains({ origins: [accountState.origin + '/*'] })) await renderAccount(true); }).catch(error => { $('accountStatus').textContent = error.message; });
+
+$('mediaType').addEventListener('change', () => $('query').dispatchEvent(new Event('input')));
+$('results').addEventListener('keydown', event => {
+  const buttons = [...$('results').querySelectorAll('button')], index = buttons.indexOf(document.activeElement);
+  if (event.key === 'ArrowDown' || event.key === 'ArrowUp') { event.preventDefault(); buttons[(index + (event.key === 'ArrowDown' ? 1 : -1) + buttons.length) % buttons.length]?.focus(); }
+  if (event.key === 'Escape') { searchRevision++; clearTimeout(searchTimer); $('results').replaceChildren(); $('query').setAttribute('aria-expanded', 'false'); $('query').focus(); }
+});

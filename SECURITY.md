@@ -16,3 +16,7 @@ Include the affected version, entry point, required attacker access, reproducibl
 - Release builds contain only approved local extension assets, with no shared proxy or remote code.
 
 Concealment is not access control: the original page remains accessible to website scripts and developer tools. Detection misses and ordinary false positives are product defects unless they establish a distinct security boundary violation. See [the review and remediation record](docs/SECURITY_REVIEW.md).
+
+## Optional account service
+
+The new `server/` and `website/` components have separate trust boundaries: web sessions, exact-origin write checks, administrator authorization, per-user settings isolation and server-enforced upload quotas. Account session credentials must never enter content-script messages or backups. Administrators are bootstrapped from server environment, never client-supplied registration roles. This initial service requires the production hardening and deployment steps in [ACCOUNTS_AND_DEPLOYMENT.md](docs/ACCOUNTS_AND_DEPLOYMENT.md); the original baseline security report predates it. Behavioral tests cover authorization, quotas, revision conflicts, session revocation and deletion. Local-only quota enforcement is not a tamper-proof licensing boundary.

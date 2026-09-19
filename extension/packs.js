@@ -10,6 +10,9 @@ globalThis.SpoilerPacks = Object.freeze([
   { id: 'last-of-us', title: 'The Last of Us', type: 'game', phrases: ['TLOU', 'Joel Miller', 'Ellie Williams', 'Abby Anderson', 'The Last of Us Part II'] },
   { id: 'dune', title: 'Dune', type: 'movie', phrases: ['Dune Part Two', 'Dune Messiah', 'Paul Atreides', 'Chani', 'Arrakis', 'Lisan al Gaib', 'Feyd-Rautha'] },
   { id: 'f1', title: 'Formula 1', type: 'sports', phrases: ['Formula One', 'F1', 'Grand Prix', 'Max Verstappen', 'Lewis Hamilton', 'Lando Norris', 'Charles Leclerc', 'Oscar Piastri'] },
+  { id: 'elden-ring', title: 'Elden Ring', type: 'game', phrases: ['Shadow of the Erdtree', 'The Tarnished', 'Malenia', 'Miquella', 'Ranni', 'Radahn', 'Marika', 'Messmer'] },
+  { id: 'baldurs-gate', title: 'Baldur’s Gate 3', type: 'game', phrases: ['Baldurs Gate 3', 'BG3', 'Shadowheart', 'Astarion', 'Lae’zel', 'Karlach', 'Gale of Waterdeep', 'Dark Urge'] },
+  { id: 'witcher', title: 'The Witcher 3', type: 'game', phrases: ['Wild Hunt', 'Geralt of Rivia', 'Ciri', 'Yennefer', 'Triss Merigold', 'Hearts of Stone', 'Blood and Wine'] },
   { id: 'oscars', title: 'Oscars', type: 'awards', phrases: ['Academy Awards', 'Best Picture', 'Best Actor', 'Best Actress', 'Oscar winner'] }
 ]);
 if (typeof module !== 'undefined') module.exports = globalThis.SpoilerPacks;
