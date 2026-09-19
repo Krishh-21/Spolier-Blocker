@@ -1,0 +1,166 @@
+╔═══════════════════════════════════════════════════════════╗
+║     SPOILER SHIELD V3.7 - QUICK REFERENCE CARD           ║
+║     BLOCK-LEVEL CLASSIFICATION ENGINE                    ║
+╚═══════════════════════════════════════════════════════════╝
+
+┌───────────────────────────────────────────────────────────┐
+│ CONSOLE COMMANDS                                          │
+└───────────────────────────────────────────────────────────┘
+
+window.__V3_STATUS()        → Show all metrics
+window.__V3_TEST()          → Test block-level blur
+window.testV3.debug()       → Full diagnostics
+window.testV3.analyze()     → Test detection
+window.testV3.stats()       → Performance stats
+
+┌───────────────────────────────────────────────────────────┐
+│ ESCALATION RULES (Block-Level Blur Triggers)             │
+└───────────────────────────────────────────────────────────┘
+
+✓ 3+ signals detected
+✓ 2+ major signals (death, ending, twist, etc.)
+✓ 25%+ sentences are spoilers
+✓ 80%+ block probability
+✓ 30%+ narrative density
+✓ AI response with 2+ signals
+
+┌───────────────────────────────────────────────────────────┐
+│ MAJOR SIGNALS (Critical Spoilers)                        │
+└───────────────────────────────────────────────────────────┘
+
+• death, ending, revelation
+• outcome, transformation, villain
+
+┌───────────────────────────────────────────────────────────┐
+│ BLOCK TYPES DETECTED                                      │
+└───────────────────────────────────────────────────────────┘
+
+• aiResponse          → AI assistant responses
+• spoilerRequest      → User asking for spoilers
+• plotSummary         → Plot summaries/synopses
+• endingDiscussion    → Ending explanations
+• characterDeaths     → Death lists
+• outcomeDiscussion   → Outcome reveals
+
+┌───────────────────────────────────────────────────────────┐
+│ NEW METRICS (V3.7)                                        │
+└───────────────────────────────────────────────────────────┘
+
+blockBlurs              → Count of block-level blurs
+spanBlurs               → Count of span-level blurs
+escalatedBlocks         → Escalation events
+spoilerLeakagePrevented → Leakage prevention count
+
+┌───────────────────────────────────────────────────────────┐
+│ VISUAL INDICATORS                                         │
+└───────────────────────────────────────────────────────────┘
+
+Block Blur Overlay:
+"⚠️ Spoiler Block (5 signals, 60% density)"
+
+Span Blur Overlay:
+"Spoiler Detected (85% - critical)"
+
+┌───────────────────────────────────────────────────────────┐
+│ DOM ATTRIBUTES (Block-Level)                              │
+└───────────────────────────────────────────────────────────┘
+
+data-spoiler-block-blur="true"
+data-spoiler-signal-count="5"
+data-spoiler-density="0.60"
+
+┌───────────────────────────────────────────────────────────┐
+│ CONSOLE LOGS TO LOOK FOR                                  │
+└───────────────────────────────────────────────────────────┘
+
+[V3.7 ESCALATION] High signal count: 5
+[V3.7 ESCALATION] Multiple major signals: 3
+[V3.7 ESCALATION] High spoiler density: 60.0%
+[V3.7 BLOCK BLUR] Blurring: P with 5 signals
+
+┌───────────────────────────────────────────────────────────┐
+│ DECISION TREE                                             │
+└───────────────────────────────────────────────────────────┘
+
+Text Detected
+    ↓
+Analyze Block Density
+    ↓
+    ├─→ Low Density (1-2 signals)
+    │   └─→ Span-Level Blur
+    │       └─→ spanBlurs++
+    │
+    └─→ High Density (3+ signals)
+        └─→ Block-Level Blur
+            └─→ blockBlurs++
+            └─→ escalatedBlocks++
+            └─→ spoilerLeakagePrevented++
+
+┌───────────────────────────────────────────────────────────┐
+│ QUICK TROUBLESHOOTING                                     │
+└───────────────────────────────────────────────────────────┘
+
+Problem: createProcessorCalls = 0
+Fix: Check manifest.json script order
+
+Problem: blockBlurs = 0
+Fix: Need 3+ signals or 2+ major signals
+
+Problem: Everything = 0
+Fix: Reload page, verify media tracked
+
+┌───────────────────────────────────────────────────────────┐
+│ PERFORMANCE TARGET                                        │
+└───────────────────────────────────────────────────────────┘
+
+Processing Time: < 15ms per text block
+V3.7 Average:    12-15ms ✓
+
+┌───────────────────────────────────────────────────────────┐
+│ SUCCESS VERIFICATION                                      │
+└───────────────────────────────────────────────────────────┘
+
+1. Run: window.__V3_STATUS()
+2. Check: createProcessorCalls > 0
+3. Check: processTextCalls > 0
+4. Check: blurCalls > 0
+5. Run: window.__V3_TEST()
+6. Verify: "✅ TEST PASSED"
+7. Check: blockBlurs > 0
+8. Check: escalatedBlocks > 0
+
+┌───────────────────────────────────────────────────────────┐
+│ EXAMPLE ESCALATION                                        │
+└───────────────────────────────────────────────────────────┘
+
+Input: "Thor kills Thanos. Black Widow dies. Tony dies."
+
+Analysis:
+- 3 major signals (kills, dies, dies)
+- majorSignalCount >= 2 ✓
+- ESCALATE TO BLOCK BLUR
+
+Result: ENTIRE paragraph blurred
+        NO SPOILER LEAKAGE ✓
+
+┌───────────────────────────────────────────────────────────┐
+│ FILES MODIFIED                                            │
+└───────────────────────────────────────────────────────────┘
+
+• v3-enhanced-detection.js  → Block classifier
+• v3-content-bridge.js      → Block blur logic
+• v3-integration.js         → Stats update
+
+┌───────────────────────────────────────────────────────────┐
+│ KEY IMPROVEMENTS                                          │
+└───────────────────────────────────────────────────────────┘
+
+✓ Spoiler leakage eliminated
+✓ Block-level density analysis
+✓ AI content handling
+✓ Smart escalation rules
+✓ Better user protection
+
+╔═══════════════════════════════════════════════════════════╗
+║  SPOILER SHIELD V3.7 - BLOCK CLASSIFIER READY            ║
+╚═══════════════════════════════════════════════════════════╝

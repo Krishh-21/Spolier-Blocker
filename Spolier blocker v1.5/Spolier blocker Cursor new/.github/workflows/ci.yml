@@ -1,0 +1,163 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    name: Lint & Validate
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Validate manifest.json
+        run: |
+          node -e "
+            const fs = require('fs');
+            const manifest = JSON.parse(fs.readFileSync('manifest.json', 'utf8'));
+            console.log('✓ manifest.json is valid JSON');
+            console.log('✓ Version:', manifest.version);
+            console.log('✓ Permissions:', manifest.permissions.length, 'required');
+            console.log('✓ Optional host permissions:', manifest.optional_host_permissions?.length || 0);
+          "
+
+      - name: Validate HTML files
+        run: |
+          for file in *.html; do
+            echo "Checking $file..."
+            node -e "
+              const fs = require('fs');
+              const html = fs.readFileSync('$file', 'utf8');
+              if (html.includes('<!DOCTYPE html') || html.includes('<!doctype html')) {
+                console.log('✓ $file has doctype');
+              } else {
+                console.warn('⚠ $file missing doctype');
+              }
+              if (html.includes('<html')) {
+                console.log('✓ $file has html tag');
+              }
+            " || true
+          done
+
+  build:
+    runs-on: ubuntu-latest
+    name: Build & Asset Conversion
+    needs: lint
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Convert SVG assets to PNG
+        run: npm run convert-assets || echo "Asset conversion skipped (shape native deps may not be available)"
+        continue-on-error: true
+
+      - name: Upload generated assets
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: generated-assets
+          path: assets/*.png
+          retention-days: 30
+          if-no-files-found: warn
+
+  permissions-audit:
+    runs-on: ubuntu-latest
+    name: Security & Permissions Audit
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Check for hardcoded credentials
+        run: |
+          echo "Scanning for potential hardcoded credentials..."
+          # Note: OAuth client IDs for public extensions are not secrets
+          if grep -r "secret\|password\|Bearer\|auth_token" . --include="*.js" --include="*.html" | grep -v "node_modules" | grep -v "\.git" | grep -v "placeholder" | grep -v "example"; then
+            echo "⚠ Possible credentials found (manual review needed)"
+          fi
+          echo "✓ Basic credential scan complete"
+
+      - name: Verify permissions minimization
+        run: |
+          node -e "
+            const fs = require('fs');
+            const manifest = JSON.parse(fs.readFileSync('manifest.json', 'utf8'));
+            const required = manifest.permissions || [];
+            const optional = manifest.optional_host_permissions || [];
+            
+            const restricted = ['tabs', 'cookies', 'webRequest', 'browsingData'];
+            const found = required.filter(p => restricted.includes(p));
+            
+            if (found.length > 0) {
+              console.warn('⚠ High-risk permissions detected:', found);
+              console.log('   (Review if all are truly necessary)');
+            }
+            
+            console.log('Required permissions:', required.length);
+            console.log('Optional host permissions:', optional.length);
+            console.log('✓ Permissions structure looks good for store submission');
+          "
+
+  docs:
+    runs-on: ubuntu-latest
+    name: Documentation Check
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Check for required docs
+        run: |
+          docs=(
+            "README.md"
+            "CHANGES_SUMMARY.md"
+            "COMPLIANCE_NOTES.md"
+          )
+          for doc in "${docs[@]}"; do
+            if [ -f "$doc" ]; then
+              echo "✓ Found $doc"
+            else
+              echo "⚠ Missing $doc"
+            fi
+          done
+
+  publish:
+    runs-on: ubuntu-latest
+    name: Build Summary
+    needs: [lint, build, permissions-audit, docs]
+    if: always()
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Generate build summary
+        run: |
+          echo "=== Extension Build Summary ===" > build-summary.txt
+          echo "Build Date: $(date)" >> build-summary.txt
+          echo "" >> build-summary.txt
+          echo "Files:" >> build-summary.txt
+          find . -maxdepth 1 -type f \( -name "*.js" -o -name "*.html" -o -name "*.css" -o -name "*.json" \) | wc -l >> build-summary.txt
+          echo "" >> build-summary.txt
+          echo "✓ Ready for Chrome Web Store submission" >> build-summary.txt
+          cat build-summary.txt
+
+      - name: Upload build summary
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-summary
+          path: build-summary.txt

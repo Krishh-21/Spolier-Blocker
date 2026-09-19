@@ -1,0 +1,273 @@
+╔═══════════════════════════════════════════════════════════╗
+║   SPOILER SHIELD V4 - QUICK START GUIDE                 ║
+╚═══════════════════════════════════════════════════════════╝
+
+5-MINUTE SETUP AND TEST
+
+═══════════════════════════════════════════════════════════
+STEP 1: VERIFY FILES (30 seconds)
+═══════════════════════════════════════════════════════════
+
+Check these V4 files exist:
+□ v4-knowledge-engine.js      (12 KB)
+□ v4-spoiler-detector.js      (11 KB)
+□ v4-benchmark.js             (12 KB)
+□ v4-integration.js           (5 KB)
+□ v4-content-bridge.js        (19 KB)
+
+Check manifest.json updated:
+□ "v4-knowledge-engine.js" in content_scripts
+□ "v4-spoiler-detector.js" in content_scripts
+□ "v4-benchmark.js" in content_scripts
+□ "v4-integration.js" in content_scripts
+□ "v4-content-bridge.js" in content_scripts
+
+═══════════════════════════════════════════════════════════
+STEP 2: LOAD EXTENSION (30 seconds)
+═══════════════════════════════════════════════════════════
+
+1. Open Chrome
+2. Go to: chrome://extensions
+3. Enable "Developer mode" (top right)
+4. Click "Load unpacked"
+5. Select extension folder
+6. Check: No errors in console
+
+═══════════════════════════════════════════════════════════
+STEP 3: VERIFY V4 LOADED (1 minute)
+═══════════════════════════════════════════════════════════
+
+1. Open any webpage
+2. Open DevTools (F12)
+3. Go to Console tab
+4. Run: window.__V4_STATUS()
+
+Expected output:
+{
+  v4Active: true,              ← MUST be true
+  bridgeLoaded: true,          ← MUST be true
+  createProcessorCalls: > 0,
+  processTextCalls: > 0,
+  intelligenceType: 'entity_event_narrative'
+}
+
+If v4Active is false:
+  → Check console for errors
+  → Verify all V4 files loaded
+  → Reload extension
+
+═══════════════════════════════════════════════════════════
+STEP 4: RUN QUICK TEST (1 minute)
+═══════════════════════════════════════════════════════════
+
+In Console, run: window.__V4_TEST()
+
+Expected output:
+Test 1: Tony Stark dies in Endgame
+  Spoiler: true          ← MUST be true
+  Entities: 1            ← Found "Tony Stark"
+  Events: 1              ← Found "death" event
+
+Test 2: Cap gets his dance
+  Spoiler: true          ← MUST be true
+  Narratives: 1          ← Found narrative pattern
+
+Test 3: Verstappen wins Monaco
+  Spoiler: true          ← MUST be true
+  Events: 1              ← Found "victory" event
+
+If any test fails:
+  → Check V4 initialization logs
+  → Verify knowledge engine loaded
+  → Run testV4.debug()
+
+═══════════════════════════════════════════════════════════
+STEP 5: RUN BENCHMARK (2 minutes)
+═══════════════════════════════════════════════════════════
+
+In Console, run: runV4Benchmark()
+
+Expected output:
+═══════════════════════════════════════
+  OVERALL RESULTS
+═══════════════════════════════════════
+Total Tests:       100+
+True Positives:    > 0
+True Negatives:    > 0
+False Positives:   < 10
+False Negatives:   < 10
+
+Precision:         > 80%    ← TARGET
+Recall:            > 70%    ← TARGET
+F1 Score:          > 75%    ← TARGET
+Accuracy:          > 80%    ← TARGET
+
+If metrics are low:
+  → Check which categories failed
+  → Review failure details
+  → May need to add more knowledge
+
+═══════════════════════════════════════════════════════════
+STEP 6: REAL-WORLD TEST (1 minute)
+═══════════════════════════════════════════════════════════
+
+1. Go to Options
+2. Add "Avengers: Endgame" to tracked media
+3. Open new tab
+4. Type in any text box: "Tony Stark dies in the finale"
+5. Expected: Text should be detected and blurred
+
+OR
+
+1. Search Google for "Avengers Endgame spoilers"
+2. Expected: Spoiler content blurred on results page
+
+═══════════════════════════════════════════════════════════
+COMMON ISSUES & FIXES
+═══════════════════════════════════════════════════════════
+
+ISSUE: v4Active = false
+FIX:
+  1. Open Console
+  2. Look for "[V4 BRIDGE]" logs
+  3. Check for error messages
+  4. Verify all 5 V4 files loaded
+  5. Reload extension
+
+ISSUE: All tests show "Spoiler: false"
+FIX:
+  1. Check: window.SpoilerShieldV4.isActive()
+  2. Run: testV4.debug()
+  3. Verify knowledge engine initialized
+  4. Check: typeof KnowledgeEngine !== 'undefined'
+
+ISSUE: Benchmark shows 0% precision
+FIX:
+  1. Check initialization logs
+  2. Verify detector loaded
+  3. Run single test: testV4.analyze('test', ['media'])
+  4. Check error logs: window.__V4_DEBUG.errors
+
+ISSUE: Performance is slow
+FIX:
+  1. Run: testV4.stats()
+  2. Check avgProcessingTime
+  3. Should be < 15ms
+  4. If higher, check knowledge base size
+
+═══════════════════════════════════════════════════════════
+CONSOLE COMMANDS REFERENCE
+═══════════════════════════════════════════════════════════
+
+window.__V4_STATUS()
+  → Quick status check
+
+window.__V4_TEST()
+  → Run 3 quick tests
+
+testV4.analyze(text, titles)
+  → Test specific text
+  → Example: testV4.analyze('Tony dies', ['Endgame'])
+
+testV4.debug()
+  → Full diagnostic panel
+
+testV4.stats()
+  → Performance statistics
+
+testV4.isActive()
+  → Check if V4 is running
+
+runV4Benchmark()
+  → Run full 100+ test suite
+
+═══════════════════════════════════════════════════════════
+WHAT V4 SHOULD DETECT
+═══════════════════════════════════════════════════════════
+
+✅ "Tony Stark dies in Endgame"
+   → Entity: Tony Stark
+   → Event: death
+   → Media: Endgame
+
+✅ "Iron Man sacrifices himself"
+   → Entity: Iron Man (alias of Tony Stark)
+   → Event: sacrifice (death type)
+
+✅ "Cap gets his dance"
+   → Narrative: Endgame ending
+   → Entity: Cap (alias of Steve Rogers)
+
+✅ "The rat saves the universe"
+   → Narrative: Endgame plot device
+
+✅ "Verstappen wins Monaco GP"
+   → Entity: Verstappen
+   → Event: victory
+   → Media: Formula 1
+
+✅ "Arthur Morgan dies in RDR2"
+   → Entity: Arthur Morgan
+   → Event: death
+   → Media: Red Dead Redemption 2
+
+═══════════════════════════════════════════════════════════
+WHAT V4 SHOULD NOT BLUR
+═══════════════════════════════════════════════════════════
+
+✅ "Endgame is a great movie"
+   → Opinion, not spoiler
+
+✅ "Tony Stark is a genius"
+   → Character trait, not event
+
+✅ "Can't wait to watch Endgame"
+   → Anticipation, not spoiler
+
+✅ "Walter White dies" (when tracking Endgame)
+   → Different media, irrelevant
+
+✅ "Iron Man appears in the movie"
+   → General statement, not spoiler
+
+═══════════════════════════════════════════════════════════
+SUCCESS CHECKLIST
+═══════════════════════════════════════════════════════════
+
+□ All 5 V4 files created
+□ manifest.json updated
+□ Extension loads without errors
+□ window.__V4_STATUS() shows v4Active: true
+□ window.__V4_TEST() passes all 3 tests
+□ runV4Benchmark() shows >80% precision
+□ Real-world test detects spoilers
+□ Irrelevant content not blurred
+□ Performance < 15ms
+
+═══════════════════════════════════════════════════════════
+NEXT STEPS
+═══════════════════════════════════════════════════════════
+
+After verification:
+1. Test on multiple websites
+2. Add more media to knowledge base
+3. Refine entity aliases
+4. Add more narrative patterns
+5. Fine-tune thresholds
+6. Monitor performance
+7. Collect user feedback
+
+═══════════════════════════════════════════════════════════
+SUPPORT
+═══════════════════════════════════════════════════════════
+
+If issues persist:
+1. Check V4_DEPLOYMENT_GUIDE.txt for detailed instructions
+2. Review V4_COMPLETE.txt for architecture overview
+3. Check console logs for specific errors
+4. Verify knowledge base has required media
+5. Test individual components with debug commands
+
+╔═══════════════════════════════════════════════════════════╗
+║  V4 QUICK START COMPLETE - READY TO TEST                 ║
+╚═══════════════════════════════════════════════════════════╝

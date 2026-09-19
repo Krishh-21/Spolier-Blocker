@@ -1,0 +1,170 @@
+{
+  "appName": {
+    "message": "Spoiler Shield",
+    "description": "The extension name"
+  },
+  "appDescription": {
+    "message": "映画、テレビ番組、ゲームのネタバレをぼかして表示することで、ネタバレから保護します",
+    "description": "The extension description"
+  },
+  "extensionEnabled": {
+    "message": "拡張機能が有効です",
+    "description": "Label for global enable toggle"
+  },
+  "enableSpoilerShield": {
+    "message": "Spoiler Shieldを有効にする",
+    "description": "Button label to enable extension"
+  },
+  "disableSpoilerShield": {
+    "message": "Spoiler Shieldを無効にする",
+    "description": "Button label to disable extension"
+  },
+  "openSettings": {
+    "message": "設定を開く",
+    "description": "Button to open options page"
+  },
+  "toggleOnThisSite": {
+    "message": "このサイトで有効",
+    "description": "Toggle label for site-specific setting"
+  },
+  "generalSettings": {
+    "message": "一般",
+    "description": "Tab label for general settings"
+  },
+  "filterSettings": {
+    "message": "フィルター",
+    "description": "Tab label for filter/keyword settings"
+  },
+  "permissionsSettings": {
+    "message": "許可",
+    "description": "Tab label for permission settings"
+  },
+  "advancedSettings": {
+    "message": "詳細",
+    "description": "Tab label for advanced settings"
+  },
+  "diagnosticsSettings": {
+    "message": "診断",
+    "description": "Tab label for diagnostics"
+  },
+  "blurStrength": {
+    "message": "ぼかし強度（ピクセル）",
+    "description": "Label for blur radius slider"
+  },
+  "blurStyle": {
+    "message": "ぼかしのスタイル",
+    "description": "Label for blur type selection"
+  },
+  "gaussianBlur": {
+    "message": "ガウスぼかし",
+    "description": "Blur style option"
+  },
+  "pixelate": {
+    "message": "ピクセル化",
+    "description": "Blur style option"
+  },
+  "solidMask": {
+    "message": "固体マスク",
+    "description": "Blur style option"
+  },
+  "overlayColor": {
+    "message": "オーバーレイの色",
+    "description": "Label for color picker"
+  },
+  "searchMedia": {
+    "message": "メディアを検索",
+    "description": "Label for media search feature"
+  },
+  "selectMediaType": {
+    "message": "メディアタイプを選択",
+    "description": "Aria label for media type dropdown"
+  },
+  "movie": {
+    "message": "映画",
+    "description": "Media type option"
+  },
+  "tvShow": {
+    "message": "テレビ番組",
+    "description": "Media type option"
+  },
+  "game": {
+    "message": "ゲーム",
+    "description": "Media type option"
+  },
+  "searchButton": {
+    "message": "検索",
+    "description": "Button label for search"
+  },
+  "selectedTitles": {
+    "message": "選択されたタイトル",
+    "description": "Section header for selected watch list"
+  },
+  "quickAddKeyword": {
+    "message": "キーワードをすばやく追加",
+    "description": "Label for quick keyword input"
+  },
+  "addButton": {
+    "message": "追加",
+    "description": "Button label to add keyword"
+  },
+  "reprocessPage": {
+    "message": "再処理",
+    "description": "Button to rescan current page"
+  },
+  "revealAll": {
+    "message": "すべてを表示",
+    "description": "Button to reveal all blurred items"
+  },
+  "hideAll": {
+    "message": "すべてを非表示",
+    "description": "Button to hide all blurred items"
+  },
+  "saveSettings": {
+    "message": "設定を保存",
+    "description": "Button to save options"
+  },
+  "settingsSaved": {
+    "message": "設定が正常に保存されました",
+    "description": "Success message after saving"
+  },
+  "permissionRequested": {
+    "message": "許可がリクエストされました。設定を更新してください。",
+    "description": "Message when permission is requested"
+  },
+  "privacyPolicy": {
+    "message": "プライバシーとデータ",
+    "description": "Link label for privacy policy"
+  },
+  "noKeywordsAdded": {
+    "message": "キーワードがまだ追加されていません",
+    "description": "Empty state message for keyword list"
+  },
+  "addKeywordPlaceholder": {
+    "message": "キーワードまたはフレーズを追加...",
+    "description": "Placeholder for keyword input"
+  },
+  "revealOnHover": {
+    "message": "ホバーで表示",
+    "description": "Setting label for hover behavior"
+  },
+  "revealOnClick": {
+    "message": "クリックで表示",
+    "description": "Setting label for click behavior"
+  },
+  "revealOnDoubleClick": {
+    "message": "ダブルクリックで表示",
+    "description": "Setting label for double-click behavior"
+  },
+  "matchWordBoundaries": {
+    "message": "単語境界を一致させる",
+    "description": "Setting label for word boundary matching"
+  },
+  "reinforceLearning": {
+    "message": "学習調整を有効にする",
+    "description": "Setting label for RL model"
+  },
+  "helpText": {
+    "message": "ヘルプが必要な場合は、拡張機能のポップアップを開くか、サポートページにアクセスしてください。",
+    "description": "Help text in welcome page"
+  }
+}

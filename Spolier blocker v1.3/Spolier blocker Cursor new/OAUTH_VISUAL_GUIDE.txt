@@ -1,0 +1,229 @@
+╔══════════════════════════════════════════════════════════════════════╗
+║                   GOOGLE OAUTH SETUP - VISUAL GUIDE                  ║
+╚══════════════════════════════════════════════════════════════════════╝
+
+┌──────────────────────────────────────────────────────────────────────┐
+│ STEP 1: GET YOUR EXTENSION ID                                       │
+└──────────────────────────────────────────────────────────────────────┘
+
+  chrome://extensions/
+         │
+         ├─ Enable "Developer mode"
+         │
+         └─ Your Extension ID: [abcdefghijk123456789]  ← COPY THIS!
+
+
+┌──────────────────────────────────────────────────────────────────────┐
+│ STEP 2: GOOGLE CLOUD CONSOLE                                        │
+└──────────────────────────────────────────────────────────────────────┘
+
+  https://console.cloud.google.com/
+         │
+         ├─ Create Project: "Spoiler Shield"
+         │        │
+         │        └─ Project created! ✓
+         │
+         ├─ Enable APIs
+         │        │
+         │        └─ Enable "Google+ API" or "People API" ✓
+         │
+         ├─ OAuth Consent Screen
+         │        │
+         │        ├─ User Type: External
+         │        ├─ App name: Spoiler Shield
+         │        ├─ Email: krushna.patare@gmail.com
+         │        ├─ Scopes: email, profile, openid
+         │        └─ Test users: krushna.patare@gmail.com ✓
+         │
+         └─ Create OAuth Client ID
+                  │
+                  ├─ Type: Web Application
+                  ├─ Name: Spoiler Shield Extension
+                  ├─ Redirect URI: 
+                  │   https://[YOUR-EXTENSION-ID].chromiumapp.org/
+                  │                    ↑
+                  │         Use ID from Step 1!
+                  │
+                  └─ Client ID: [123456789-abc...xyz.apps.googleusercontent.com]
+                                          ↑
+                                   COPY THIS TOO!
+
+
+┌──────────────────────────────────────────────────────────────────────┐
+│ STEP 3: UPDATE YOUR CODE                                            │
+└──────────────────────────────────────────────────────────────────────┘
+
+  File: manifest.json
+  ═══════════════════════════════════════
+  {
+    "oauth2": {
+      "client_id": "PASTE-YOUR-CLIENT-ID-HERE.apps.googleusercontent.com",
+                    ↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑
+                    FROM STEP 2!
+      "scopes": ["openid", "email", "profile"]
+    }
+  }
+
+
+  File: options.js (line ~175)
+  ═══════════════════════════════════════
+  const clientId = 'PASTE-YOUR-CLIENT-ID-HERE.apps.googleusercontent.com';
+                    ↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑
+                    SAME CLIENT ID!
+
+
+┌──────────────────────────────────────────────────────────────────────┐
+│ STEP 4: RELOAD & TEST                                               │
+└──────────────────────────────────────────────────────────────────────┘
+
+  chrome://extensions/
+         │
+         └─ Click 🔄 Reload on "Spoiler Shield"
+                  │
+                  └─ Extension reloaded ✓
+
+  Click Extension Icon → Settings → Sign In with Google
+         │
+         ├─ Google OAuth screen appears
+         │        │
+         │        ├─ Select your account
+         │        └─ Click "Continue"
+         │
+         └─ ✅ SIGNED IN SUCCESSFULLY!
+
+
+╔══════════════════════════════════════════════════════════════════════╗
+║                         QUICK REFERENCE                              ║
+╚══════════════════════════════════════════════════════════════════════╝
+
+┌─────────────────────────────────────────────────────────────────┐
+│ WHAT YOU NEED:                                                  │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  1. Extension ID:                                              │
+│     ┌──────────────────────────────────────────────────┐      │
+│     │ abcdefghijklmnopqrstuvwxyz123456              │      │
+│     └──────────────────────────────────────────────────┘      │
+│     From: chrome://extensions/                                 │
+│                                                                 │
+│  2. Client ID:                                                 │
+│     ┌──────────────────────────────────────────────────┐      │
+│     │ 123456789-abc...xyz.apps.googleusercontent.com │      │
+│     └──────────────────────────────────────────────────┘      │
+│     From: Google Cloud Console                                 │
+│                                                                 │
+│  3. Redirect URI:                                              │
+│     ┌──────────────────────────────────────────────────┐      │
+│     │ https://[extension-id].chromiumapp.org/        │      │
+│     └──────────────────────────────────────────────────┘      │
+│     Combine extension ID + ".chromiumapp.org/"                 │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+
+
+╔══════════════════════════════════════════════════════════════════════╗
+║                         COMMON MISTAKES                              ║
+╚══════════════════════════════════════════════════════════════════════╝
+
+  ❌ Wrong:  https://YOUR-EXTENSION-ID.chromiumapp.org/
+             (forgot to replace YOUR-EXTENSION-ID)
+
+  ✅ Right:  https://abcdefghijklmnop.chromiumapp.org/
+             (used actual extension ID)
+
+  ────────────────────────────────────────────────────────────
+
+  ❌ Wrong:  "client_id": "YOUR-CLIENT-ID-HERE..."
+             (forgot to replace with actual client ID)
+
+  ✅ Right:  "client_id": "123456789-abc.apps.googleusercontent.com"
+             (used actual client ID from Google Console)
+
+  ────────────────────────────────────────────────────────────
+
+  ❌ Wrong:  https://abcdefghijk.chromiumapp.org
+             (missing trailing slash)
+
+  ✅ Right:  https://abcdefghijk.chromiumapp.org/
+             (has trailing slash)
+
+
+╔══════════════════════════════════════════════════════════════════════╗
+║                         FLOW DIAGRAM                                 ║
+╚══════════════════════════════════════════════════════════════════════╝
+
+  User clicks "Sign In with Google"
+         │
+         ├─ Extension sends OAuth request
+         │        │
+         │        ├─ Uses Client ID from manifest.json
+         │        └─ Redirects to Google
+         │
+  Google shows OAuth consent screen
+         │
+         ├─ User grants permissions
+         │        │
+         │        └─ Google redirects back to extension
+         │                │
+         │                └─ https://[ext-id].chromiumapp.org/
+         │
+  Extension receives OAuth token
+         │
+         ├─ Fetches user info from Google API
+         │        │
+         │        └─ Gets: email, name, picture
+         │
+  Extension stores user account
+         │
+         └─ ✅ User is signed in!
+
+
+╔══════════════════════════════════════════════════════════════════════╗
+║                         TIME ESTIMATE                                ║
+╚══════════════════════════════════════════════════════════════════════╝
+
+  Step 1: Get Extension ID          [1 minute]
+  Step 2: Google Cloud Setup        [5 minutes]
+  Step 3: Update Code              [1 minute]
+  Step 4: Test                     [1 minute]
+  ────────────────────────────────────────────
+  TOTAL:                           [8 minutes]
+
+
+╔══════════════════════════════════════════════════════════════════════╗
+║                         CHECKLIST                                    ║
+╚══════════════════════════════════════════════════════════════════════╝
+
+  [ ] Got extension ID from chrome://extensions/
+  [ ] Created Google Cloud project
+  [ ] Enabled API (Google+ or People API)
+  [ ] Configured OAuth consent screen
+  [ ] Added test user (krushna.patare@gmail.com)
+  [ ] Created OAuth client ID (Web application)
+  [ ] Added redirect URI with correct extension ID
+  [ ] Copied client ID
+  [ ] Updated manifest.json line ~11
+  [ ] Updated options.js line ~175
+  [ ] Reloaded extension
+  [ ] Tested sign-in
+  [ ] ✅ SUCCESS!
+
+
+╔══════════════════════════════════════════════════════════════════════╗
+║                  WHAT HAPPENS AFTER SETUP?                           ║
+╚══════════════════════════════════════════════════════════════════════╝
+
+  ✓ Users can sign in with their Google account
+  ✓ Settings sync across devices
+  ✓ Watched items saved per user
+  ✓ No more "OAuth client not found" error
+  ✓ Professional authentication experience
+  ✓ Secure and private
+
+
+═══════════════════════════════════════════════════════════════════════
+
+  Need detailed help? See: SETUP_GOOGLE_SIGNIN.md
+  Full guide: GOOGLE_OAUTH_SETUP_GUIDE.md
+
+═══════════════════════════════════════════════════════════════════════

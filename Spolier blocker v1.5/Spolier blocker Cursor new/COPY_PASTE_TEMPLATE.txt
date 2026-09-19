@@ -1,0 +1,222 @@
+╔═══════════════════════════════════════════════════════════════╗
+║           COPY-PASTE TEMPLATE FOR GOOGLE OAUTH               ║
+╚═══════════════════════════════════════════════════════════════╝
+
+STEP-BY-STEP INSTRUCTIONS:
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. GET YOUR EXTENSION ID
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Go to: chrome://extensions/
+Enable: Developer mode
+Find: Spoiler Shield
+Copy: The ID (looks like "abcdefgh...")
+
+YOUR EXTENSION ID:
+┌─────────────────────────────────────────────────────┐
+│                                                     │
+│  [PASTE YOUR EXTENSION ID HERE]                    │
+│                                                     │
+└─────────────────────────────────────────────────────┘
+
+Example: phkdfghmjkliopasdfghjklzxcvbnm
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2. CREATE REDIRECT URI
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Formula: https://[YOUR-EXTENSION-ID].chromiumapp.org/
+
+YOUR REDIRECT URI (for Google Console):
+┌─────────────────────────────────────────────────────┐
+│                                                     │
+│  https://[EXTENSION-ID].chromiumapp.org/           │
+│                                                     │
+└─────────────────────────────────────────────────────┘
+
+Example: https://phkdfghmjkliopasdfghjklzxcvbnm.chromiumapp.org/
+
+⚠️ DON'T FORGET THE TRAILING SLASH (/)!
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+3. GOOGLE CLOUD CONSOLE - OAUTH CONSENT SCREEN
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+URL: https://console.cloud.google.com/apis/credentials/consent
+
+COPY-PASTE THESE VALUES:
+┌─────────────────────────────────────────────────────┐
+│ App name:           Spoiler Shield                  │
+│ User support email: krushna.patare@gmail.com       │
+│ Developer email:    krushna.patare@gmail.com       │
+│                                                     │
+│ Scopes to add:                                      │
+│   ✓ userinfo.email                                 │
+│   ✓ userinfo.profile                               │
+│   ✓ openid                                         │
+│                                                     │
+│ Test users:                                         │
+│   • krushna.patare@gmail.com                       │
+└─────────────────────────────────────────────────────┘
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+4. GOOGLE CLOUD CONSOLE - OAUTH CLIENT ID
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+URL: https://console.cloud.google.com/apis/credentials
+
+Click: + CREATE CREDENTIALS → OAuth client ID
+
+COPY-PASTE THESE VALUES:
+┌─────────────────────────────────────────────────────┐
+│ Application type:   Web application                 │
+│ Name:               Spoiler Shield Extension        │
+│                                                     │
+│ Authorized redirect URIs:                           │
+│   [Click "+ ADD URI"]                               │
+│   Paste your redirect URI from Step 2 above        │
+│                                                     │
+└─────────────────────────────────────────────────────┘
+
+AFTER CLICKING "CREATE", COPY YOUR CLIENT ID:
+┌─────────────────────────────────────────────────────┐
+│                                                     │
+│  [COPY THE CLIENT ID HERE]                         │
+│                                                     │
+└─────────────────────────────────────────────────────┘
+
+Format: 123456789-abcdefg.apps.googleusercontent.com
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+5. UPDATE manifest.json
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Find this section in manifest.json (around line 11):
+
+  "oauth2": {
+    "client_id": "YOUR-CLIENT-ID-HERE.apps.googleusercontent.com",
+    "scopes": [
+      "openid",
+      "email",
+      "profile"
+    ]
+  },
+
+REPLACE WITH (paste your actual client ID):
+┌─────────────────────────────────────────────────────┐
+│  "oauth2": {                                        │
+│    "client_id": "[PASTE YOUR CLIENT ID]",          │
+│    "scopes": [                                      │
+│      "openid",                                      │
+│      "email",                                       │
+│      "profile"                                      │
+│    ]                                                │
+│  },                                                 │
+└─────────────────────────────────────────────────────┘
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+6. UPDATE options.js
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Find this line in options.js (around line 175):
+
+const clientId = '1077083917677-rmntmr1b2i7lq0e90kd0d8i2vkb8autc.apps.googleusercontent.com';
+
+REPLACE WITH (paste your actual client ID):
+┌─────────────────────────────────────────────────────┐
+│ const clientId = '[PASTE YOUR CLIENT ID]';         │
+└─────────────────────────────────────────────────────┘
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+7. FINAL CHECKLIST
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[ ] Got extension ID from chrome://extensions/
+[ ] Created redirect URI (https://[id].chromiumapp.org/)
+[ ] Created Google Cloud project
+[ ] Enabled Google+ API
+[ ] Configured OAuth consent screen
+[ ] Added test user: krushna.patare@gmail.com
+[ ] Created OAuth client ID (Web application)
+[ ] Added redirect URI to Google Console
+[ ] Copied client ID
+[ ] Updated manifest.json with client ID
+[ ] Updated options.js with client ID
+[ ] Reloaded extension (chrome://extensions/ → click Reload)
+[ ] Tested sign-in (Extension → Settings → Sign In)
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+YOUR VALUES (FILL THIS OUT)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Extension ID:
+└─➤ [                                          ]
+
+Client ID:
+└─➤ [                                          ]
+
+Redirect URI:
+└─➤ https://[          ].chromiumapp.org/
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+EXAMPLE (DO NOT COPY - USE YOUR OWN VALUES)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Extension ID:
+└─➤ phkdfghmjkliopasdfghjklzxcvbnm
+
+Client ID:
+└─➤ 123456789-abc123xyz456.apps.googleusercontent.com
+
+Redirect URI:
+└─➤ https://phkdfghmjkliopasdfghjklzxcvbnm.chromiumapp.org/
+
+In manifest.json:
+  "oauth2": {
+    "client_id": "123456789-abc123xyz456.apps.googleusercontent.com",
+    "scopes": ["openid", "email", "profile"]
+  },
+
+In options.js:
+  const clientId = '123456789-abc123xyz456.apps.googleusercontent.com';
+
+
+═══════════════════════════════════════════════════════════════
+                       QUICK LINKS
+═══════════════════════════════════════════════════════════════
+
+Chrome Extensions:
+→ chrome://extensions/
+
+Google Cloud Console:
+→ https://console.cloud.google.com/
+
+OAuth Consent Screen:
+→ https://console.cloud.google.com/apis/credentials/consent
+
+OAuth Credentials:
+→ https://console.cloud.google.com/apis/credentials
+
+API Library:
+→ https://console.cloud.google.com/apis/library
+
+
+═══════════════════════════════════════════════════════════════
+                        NEED HELP?
+═══════════════════════════════════════════════════════════════
+
+See these guides:
+• SETUP_GOOGLE_SIGNIN.md      (Quick 5-min guide)
+• GOOGLE_OAUTH_SETUP_GUIDE.md (Detailed guide)
+• OAUTH_VISUAL_GUIDE.txt      (Visual diagrams)
+
+═══════════════════════════════════════════════════════════════

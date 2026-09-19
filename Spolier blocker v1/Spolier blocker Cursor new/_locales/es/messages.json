@@ -1,0 +1,170 @@
+{
+  "appName": {
+    "message": "Spoiler Shield",
+    "description": "The extension name"
+  },
+  "appDescription": {
+    "message": "Bloquea spoilers de películas, series y videojuegos difuminando texto e imágenes coincidentes",
+    "description": "The extension description"
+  },
+  "extensionEnabled": {
+    "message": "Extensión habilitada",
+    "description": "Label for global enable toggle"
+  },
+  "enableSpoilerShield": {
+    "message": "Habilitar Spoiler Shield",
+    "description": "Button label to enable extension"
+  },
+  "disableSpoilerShield": {
+    "message": "Deshabilitar Spoiler Shield",
+    "description": "Button label to disable extension"
+  },
+  "openSettings": {
+    "message": "Abrir configuración",
+    "description": "Button to open options page"
+  },
+  "toggleOnThisSite": {
+    "message": "Habilitado en este sitio",
+    "description": "Toggle label for site-specific setting"
+  },
+  "generalSettings": {
+    "message": "General",
+    "description": "Tab label for general settings"
+  },
+  "filterSettings": {
+    "message": "Filtros",
+    "description": "Tab label for filter/keyword settings"
+  },
+  "permissionsSettings": {
+    "message": "Permisos",
+    "description": "Tab label for permission settings"
+  },
+  "advancedSettings": {
+    "message": "Avanzado",
+    "description": "Tab label for advanced settings"
+  },
+  "diagnosticsSettings": {
+    "message": "Diagnósticos",
+    "description": "Tab label for diagnostics"
+  },
+  "blurStrength": {
+    "message": "Intensidad de desenfoque (píxeles)",
+    "description": "Label for blur radius slider"
+  },
+  "blurStyle": {
+    "message": "Estilo de desenfoque",
+    "description": "Label for blur type selection"
+  },
+  "gaussianBlur": {
+    "message": "Desenfoque gaussiano",
+    "description": "Blur style option"
+  },
+  "pixelate": {
+    "message": "Pixelado",
+    "description": "Blur style option"
+  },
+  "solidMask": {
+    "message": "Máscara sólida",
+    "description": "Blur style option"
+  },
+  "overlayColor": {
+    "message": "Color de superposición",
+    "description": "Label for color picker"
+  },
+  "searchMedia": {
+    "message": "Buscar medio",
+    "description": "Label for media search feature"
+  },
+  "selectMediaType": {
+    "message": "Seleccionar tipo de medio",
+    "description": "Aria label for media type dropdown"
+  },
+  "movie": {
+    "message": "Película",
+    "description": "Media type option"
+  },
+  "tvShow": {
+    "message": "Serie de TV",
+    "description": "Media type option"
+  },
+  "game": {
+    "message": "Videojuego",
+    "description": "Media type option"
+  },
+  "searchButton": {
+    "message": "Buscar",
+    "description": "Button label for search"
+  },
+  "selectedTitles": {
+    "message": "Títulos seleccionados",
+    "description": "Section header for selected watch list"
+  },
+  "quickAddKeyword": {
+    "message": "Agregar palabra clave rápidamente",
+    "description": "Label for quick keyword input"
+  },
+  "addButton": {
+    "message": "Agregar",
+    "description": "Button label to add keyword"
+  },
+  "reprocessPage": {
+    "message": "Reprocesar",
+    "description": "Button to rescan current page"
+  },
+  "revealAll": {
+    "message": "Revelar todo",
+    "description": "Button to reveal all blurred items"
+  },
+  "hideAll": {
+    "message": "Ocultar todo",
+    "description": "Button to hide all blurred items"
+  },
+  "saveSettings": {
+    "message": "Guardar configuración",
+    "description": "Button to save options"
+  },
+  "settingsSaved": {
+    "message": "Configuración guardada exitosamente",
+    "description": "Success message after saving"
+  },
+  "permissionRequested": {
+    "message": "Permiso solicitado. Por favor, actualice la configuración.",
+    "description": "Message when permission is requested"
+  },
+  "privacyPolicy": {
+    "message": "Privacidad y datos",
+    "description": "Link label for privacy policy"
+  },
+  "noKeywordsAdded": {
+    "message": "Aún no se han agregado palabras clave",
+    "description": "Empty state message for keyword list"
+  },
+  "addKeywordPlaceholder": {
+    "message": "Agregar palabra clave o frase...",
+    "description": "Placeholder for keyword input"
+  },
+  "revealOnHover": {
+    "message": "Revelar al pasar",
+    "description": "Setting label for hover behavior"
+  },
+  "revealOnClick": {
+    "message": "Revelar al hacer clic",
+    "description": "Setting label for click behavior"
+  },
+  "revealOnDoubleClick": {
+    "message": "Revelar al hacer doble clic",
+    "description": "Setting label for double-click behavior"
+  },
+  "matchWordBoundaries": {
+    "message": "Coincidir límites de palabras",
+    "description": "Setting label for word boundary matching"
+  },
+  "reinforceLearning": {
+    "message": "Habilitar ajustes de aprendizaje",
+    "description": "Setting label for RL model"
+  },
+  "helpText": {
+    "message": "Si necesita ayuda, abra la ventana emergente de la extensión o visite la página de soporte.",
+    "description": "Help text in welcome page"
+  }
+}

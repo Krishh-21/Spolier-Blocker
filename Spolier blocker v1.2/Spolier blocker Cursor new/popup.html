@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' https://image.tmdb.org data:; connect-src 'self' https://api.themoviedb.org https://*.vercel.app; font-src 'self'">
+  <title>Spoiler Shield</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    body { font-family: Arial, sans-serif; padding: 10px; width: 300px; }
+    input, button, select { margin: 5px 0; }
+    ul { list-style: none; padding: 0; }
+    li { margin: 5px 0; }
+  </style>
+</head>
+<body>
+  <a href="#main-content" class="skip-to-main">Skip to main content</a>
+  <h1 style="margin:0 0 6px">Spoiler Shield</h1>
+  <div class="row" style="justify-content:space-between; align-items:center">
+    <label class="row" for="toggleEnabled"><input type="checkbox" id="toggleEnabled" aria-label="Toggle extension on/off"> <span class="subtle">Extension enabled</span></label>
+    <button class="btn ghost" id="openOptions" aria-label="Open settings">Options</button>
+  </div>
+  <div class="card" style="margin-top:8px">
+    <div class="row">
+      <div class="subtle">This site:</div>
+      <div id="siteHost" class="chip" aria-live="polite">–</div>
+      <label class="row" style="margin-left:auto" for="siteToggle"><input type="checkbox" id="siteToggle" aria-label="Enable extension on this site"> <span class="subtle">Enabled here</span></label>
+    </div>
+  </div>
+  <div class="card" style="margin-top:8px">
+    <fieldset>
+      <legend style="font-weight: 600; margin-bottom: 8px">Search media</legend>
+      <div class="row">
+        <label for="mediaType" class="sr-only">Media type</label>
+        <select id="mediaType" style="flex:0 0 110px" aria-label="Select media type">
+          <option value="movie">Movie</option>
+          <option value="tv">TV Show</option>
+          <option value="game">Game</option>
+        </select>
+        <label for="searchInput" class="sr-only">Search for title</label>
+        <input type="text" id="searchInput" placeholder="Search for title..." style="flex:1 1 auto" aria-label="Enter title to search">
+        <button class="btn" id="searchButton" aria-label="Search">Search</button>
+      </div>
+    </fieldset>
+    <div id="results" role="region" aria-label="Search results" aria-live="polite"></div>
+  </div>
+  <div class="row" style="margin-top:8px">
+    <button class="btn ghost" id="reprocessBtn" aria-label="Reprocess page for spoilers">Reprocess</button>
+    <button class="btn ghost" id="revealAllBtn" title="Temporarily reveal all blurred items on this page" aria-label="Reveal all blurred items">Reveal all</button>
+    <button class="btn ghost" id="hideAllBtn" title="Hide all blurred items again" aria-label="Hide all blurred items">Hide all</button>
+  </div>
+  
+  <!-- HIGH PRIORITY #5: Reblur Timer Feature -->
+  <div class="card" style="margin-top:8px; background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);">
+    <fieldset style="border: none; padding: 0; margin: 0">
+      <legend style="font-weight: 600; margin-bottom: 8px; color: #667eea">⏱️ Auto-Reblur Timer</legend>
+      <p class="subtle" style="font-size: 12px; margin: 0 0 10px 0; line-height: 1.4">
+        Automatically hide revealed spoilers after a delay (unique feature!)
+      </p>
+      <div class="row" style="align-items: center; gap: 10px">
+        <label for="reblurTimer" class="subtle" style="font-size: 13px; white-space: nowrap">After</label>
+        <select id="reblurTimer" style="flex: 1" aria-label="Auto-reblur delay">
+          <option value="0">Never (stay revealed)</option>
+          <option value="3000">3 seconds</option>
+          <option value="5000">5 seconds</option>
+          <option value="10000">10 seconds</option>
+          <option value="30000">30 seconds</option>
+        </select>
+      </div>
+      <div style="font-size: 11px; color: #98a2c8; margin-top: 6px; font-style: italic">
+        💡 Prevents accidental permanent reveals
+      </div>
+    </fieldset>
+  </div>
+  <section id="main-content">
+    <h2>Selected Titles</h2>
+    <ul id="selectedList" aria-label="List of selected titles"></ul>
+    <div class="row" style="margin-top:6px">
+      <label for="assignTitle" class="sr-only">Select title</label>
+      <select id="assignTitle" style="flex:1 1 auto" aria-label="Select title to assign">
+        <option value="">-- Select title --</option>
+      </select>
+      <button class="btn ghost" id="addMissedBtn" aria-label="Add as custom spoiler keyword">Add missed spoiler</button>
+      <button class="btn ghost" id="markWrongBtn" title="Click a blurred element to mark it not a spoiler" aria-label="Mark items as false positives">Mark wrong</button>
+    </div>
+    <fieldset style="border: none; padding: 0; margin: 0">
+      <legend style="font-weight: 600; margin: 8px 0; font-size: 14px">Quick add keyword</legend>
+      <div class="row">
+        <label for="quickKeyword" class="sr-only">Quick keyword entry</label>
+        <input type="text" id="quickKeyword" placeholder="Add keyword quickly" aria-label="Enter keyword" aria-describedby="keyword-help">
+        <button class="btn" id="addQuickKeyword" aria-label="Add keyword">Add</button>
+      </div>
+      <div id="keyword-help" class="sr-only">This will add the keyword to your custom keyword list for spoiler detection.</div>
+    </fieldset>
+  </section>
+  <div id="status" class="subtle" style="margin-top:6px" role="status" aria-live="polite" aria-atomic="true"></div>
+  
+  <!-- MEDIUM #14: Keyboard Shortcut Discoverability -->
+  <div style="margin-top: 12px; padding: 10px; background: rgba(102, 126, 234, 0.05); border-radius: 8px; border: 1px solid rgba(102, 126, 234, 0.2);">
+    <div style="font-size: 11px; font-weight: 600; color: #667eea; margin-bottom: 6px;">⌨️ Keyboard Shortcuts</div>
+    <div style="display: flex; gap: 12px; font-size: 11px; color: #98a2c8;">
+      <span><kbd style="background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px; font-family: monospace;">Ctrl+Shift+Y</kbd> Toggle On/Off</span>
+      <span><kbd style="background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px; font-family: monospace;">Ctrl+Shift+U</kbd> Reprocess</span>
+    </div>
+  </div>
+  
+  <style>
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0 }
+  </style>
+  <script src="compression-utils.js"></script>
+  <script src="indexeddb-manager.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

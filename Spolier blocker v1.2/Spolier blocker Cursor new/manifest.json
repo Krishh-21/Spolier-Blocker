@@ -1,0 +1,69 @@
+{
+  "manifest_version": 3,
+  "name": "__MSG_appName__",
+  "version": "1.2.0",
+  "description": "__MSG_appDescription__",
+  "permissions": [
+    "storage",
+    "scripting",
+    "contextMenus"
+  ],
+  "optional_permissions": [
+    "activeTab",
+    "tabs",
+    "identity"
+  ],
+  "optional_host_permissions": [
+    "https://api.themoviedb.org/*",
+    "https://www.googleapis.com/*",
+    "https://*/*"
+  ],
+  "host_permissions": [],
+  "options_page": "options.html",
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icon16.png",
+      "48": "icon48.png",
+      "128": "icon128.png"
+    }
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["indexeddb-manager.js", "content.js"],
+      "run_at": "document_end"
+    }
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "commands": {
+    "toggle-spoiler-shield": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+Y"
+      },
+      "description": "Toggle Spoiler Shield on/off"
+    },
+    "reprocess-page": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+U"
+      },
+      "description": "Reprocess current page for spoilers"
+    }
+  },
+  "icons": {
+    "16": "icon16.png",
+    "48": "icon48.png",
+    "128": "icon128.png"
+  },
+  "default_locale": "en",
+  "short_name": "SpoilerShield",
+  "homepage_url": "https://github.com/yourusername/spoiler-shield",
+  "web_accessible_resources": [
+    {
+      "resources": ["styles.css", "welcome.html", "onboarding.html", "assets/welcome.css", "assets/welcome-hero.png", "assets/*"],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}

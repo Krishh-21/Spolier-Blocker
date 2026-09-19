@@ -1,0 +1,159 @@
+=====================================================
+SPOILER SHIELD V3.5 - ROOT CAUSE FIX COMPLETE
+=====================================================
+
+CRITICAL ISSUE IDENTIFIED:
+--------------------------
+Line 787 in content.js was calling createProcessor() as a LOCAL function,
+not window.createProcessor(). This meant V3's override was NEVER invoked.
+
+ROOT CAUSE:
+-----------
+JavaScript resolves function calls to the local scope first. Since 
+createProcessor is defined as a local function in content.js, the call
+"createProcessor(phrases, store)" always used the local function, 
+completely bypassing the V3 override on window.createProcessor.
+
+FIX APPLIED:
+------------
+✅ Changed line 787 in content.js from:
+   const processor = createProcessor(phrases, store);
+   
+   To:
+   const processor = window.createProcessor(phrases, store);
+
+✅ Added global debug counters in v3-content-bridge.js:
+   window.__V3_DEBUG = {
+     createProcessorCalls: 0,
+     processTextCalls: 0,
+     blurCalls: 0,
+     nodesProcessed: 0,
+     textNodesProcessed: 0,
+     mutationEvents: 0,
+     errors: []
+   }
+
+✅ Added counter increments at critical points:
+   - createProcessorCalls++ when createV3Processor executes
+   - processTextCalls++ when V3 processText executes
+   - blurCalls++ when spoiler is blurred
+   - nodesProcessed++ for each DOM node
+   - textNodesProcessed++ for each text node
+   - errors[] tracks all errors
+
+✅ Added window.__V3_STATUS() function:
+   Returns all debug counters and status information
+
+✅ Added window.__V3_TEST() function:
+   Inserts test spoiler: "Walter White dies in the finale of Breaking Bad"
+   Reports whether it was processed and blurred
+   Auto-removes after 5 seconds
+
+VERIFICATION STEPS:
+-------------------
+1. Load extension in Chrome
+2. Open any webpage
+3. Open DevTools Console
+4. Run: window.__V3_STATUS()
+5. Expected output:
+   {
+     createProcessorCalls: > 0   (CRITICAL)
+     processTextCalls: > 0       (CRITICAL)
+     blurCalls: > 0              (CRITICAL if spoilers present)
+     nodesProcessed: > 0
+     textNodesProcessed: > 0
+     v3Active: true
+     bridgeLoaded: true
+   }
+
+6. Run: window.__V3_TEST()
+7. Expected: Yellow box appears with blurred text
+8. Console should show: "✅ TEST PASSED: Spoiler was detected and blurred"
+
+SUCCESS CRITERIA:
+-----------------
+DO NOT claim success unless:
+✅ createProcessorCalls > 0
+✅ processTextCalls > 0
+✅ blurCalls > 0 (on pages with actual spoilers)
+✅ window.__V3_TEST() passes
+
+EXECUTION FLOW (FIXED):
+------------------------
+content.js load
+↓
+V3 bridge loads
+↓
+V3 overrides window.createProcessor
+↓
+reprocessNow() executes
+↓
+Calls window.createProcessor(phrases, store)  ← FIXED: now goes through window
+↓
+V3 createV3Processor executes  ← NOW INVOKED
+↓
+createProcessorCalls++
+↓
+processor.walk(node)
+↓
+walkWithV3(node)
+↓
+processTextNodeV3(node)
+↓
+window.SpoilerShieldV3.processText(text)  ← V3 DETECTION
+↓
+processTextCalls++
+↓
+If spoiler detected:
+  blurCalls++
+  wrapTextSpoiler()
+  ↓
+  SPOILER BLURRED ✅
+
+FILES MODIFIED:
+---------------
+1. content.js
+   - Line 787: Changed to window.createProcessor(phrases, store)
+   - Added debug log after processor creation
+
+2. v3-content-bridge.js
+   - Added window.__V3_DEBUG global counters
+   - Incremented counters at all critical points
+   - Added window.__V3_STATUS() helper
+   - Added window.__V3_TEST() helper
+   - Added error tracking
+
+CONSOLE COMMANDS:
+-----------------
+window.__V3_STATUS()        - Show all counters and status
+window.__V3_TEST()          - Insert test spoiler and verify
+window.testV3.debug()       - Show V3 integration diagnostics
+window.testV3.analyze(text, titles) - Test V3 detection on text
+
+DEBUG LOGS TO LOOK FOR:
+-----------------------
+[V3.5 DEBUG] content.js createProcessor defined at line 166
+[V3.5 DEBUG] createProcessor exported to window
+[V3.5 DEBUG] Processor created via window.createProcessor
+[V3.5 DEBUG] V3 createProcessor override called
+[V3.5 DEBUG] createV3Processor called (count: 1)
+[V3.5 DEBUG] Text analyzed: { ... }
+[V3.5 DEBUG] Spoiler detected! Blurring text... (total blurs: 1)
+
+IF COUNTERS ARE STILL 0:
+-------------------------
+Check:
+1. Is V3 enabled in settings? (v3Enabled: true)
+2. Are scripts loading in correct order in manifest.json?
+3. Does window.createProcessor exist before content.js calls it?
+4. Check console for any JavaScript errors
+5. Verify window.__v3BridgeLoaded === true
+
+NEXT STEPS:
+-----------
+1. Test on real webpage with spoilers
+2. Run window.__V3_STATUS() to verify counters
+3. Run window.__V3_TEST() to verify detection
+4. Only claim success when counters > 0
+
+=====================================================

@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' https://image.tmdb.org data:; connect-src 'self' https://api.themoviedb.org https://*.vercel.app; font-src 'self'">
+  <title>Welcome to Spoiler Shield</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #0b1020 0%, #1a1f3a 100%);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+    }
+    
+    .onboarding-container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 40px 20px;
+    }
+    
+    .onboarding-step {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 16px;
+      padding: 40px;
+      margin-bottom: 20px;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      display: none;
+    }
+    
+    .onboarding-step.active {
+      display: block;
+      animation: fadeIn 0.5s ease;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .step-header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    
+    .step-number {
+      display: inline-block;
+      width: 40px;
+      height: 40px;
+      line-height: 40px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      font-weight: 600;
+      margin-bottom: 10px;
+    }
+    
+    .step-title {
+      font-size: 28px;
+      font-weight: 700;
+      color: #e7ecff;
+      margin: 10px 0;
+    }
+    
+    .step-description {
+      color: #98a2c8;
+      font-size: 16px;
+      line-height: 1.6;
+    }
+    
+    .step-content {
+      margin: 30px 0;
+    }
+    
+    .popular-titles {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 15px;
+      margin: 20px 0;
+    }
+    
+    .title-card {
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      padding: 15px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      border: 2px solid transparent;
+    }
+    
+    .title-card:hover {
+      background: rgba(255, 255, 255, 0.12);
+      transform: translateY(-2px);
+    }
+    
+    .title-card.selected {
+      border-color: #667eea;
+      background: rgba(102, 126, 234, 0.2);
+    }
+    
+    .title-card-icon {
+      font-size: 40px;
+      margin-bottom: 8px;
+    }
+    
+    .title-card-name {
+      color: #e7ecff;
+      font-size: 14px;
+      font-weight: 500;
+    }
+    
+    .step-actions {
+      display: flex;
+      gap: 15px;
+      justify-content: center;
+      margin-top: 30px;
+    }
+    
+    .btn-onboarding {
+      padding: 12px 32px;
+      font-size: 16px;
+      font-weight: 600;
+      border-radius: 12px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+    }
+    
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.1);
+      color: #e7ecff;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.15);
+    }
+    
+    .btn-skip {
+      background: transparent;
+      color: #98a2c8;
+      text-decoration: underline;
+      border: none;
+      cursor: pointer;
+      padding: 12px 24px;
+      font-size: 14px;
+    }
+    
+    .demo-preview {
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 12px;
+      padding: 20px;
+      margin: 20px 0;
+    }
+    
+    .demo-text {
+      color: #e7ecff;
+      font-size: 16px;
+      line-height: 1.8;
+      margin-bottom: 15px;
+    }
+    
+    .demo-blurred {
+      display: inline;
+      filter: blur(6px);
+      background: rgba(102, 126, 234, 0.2);
+      padding: 2px 8px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: filter 0.3s ease;
+    }
+    
+    .demo-blurred:hover {
+      filter: blur(0);
+    }
+    
+    .demo-label {
+      display: inline-block;
+      background: #0b1020;
+      color: #e7ecff;
+      font-size: 11px;
+      padding: 3px 8px;
+      border-radius: 6px;
+      margin-left: 8px;
+      font-weight: 600;
+    }
+    
+    .progress-dots {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      margin-top: 30px;
+    }
+    
+    .progress-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.2);
+      transition: all 0.3s ease;
+    }
+    
+    .progress-dot.active {
+      background: #667eea;
+      width: 30px;
+      border-radius: 5px;
+    }
+    
+    .keyboard-shortcuts {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+      margin: 20px 0;
+    }
+    
+    .shortcut-item {
+      background: rgba(255, 255, 255, 0.05);
+      padding: 15px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+    
+    .shortcut-key {
+      background: rgba(0, 0, 0, 0.4);
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      color: #e7ecff;
+      white-space: nowrap;
+    }
+    
+    .shortcut-desc {
+      color: #98a2c8;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div class="onboarding-container">
+    <!-- Step 1: Welcome & Choose Titles -->
+    <div class="onboarding-step active" id="step1">
+      <div class="step-header">
+        <div class="step-number">1</div>
+        <h1 class="step-title">Welcome to Spoiler Shield! 🛡️</h1>
+        <p class="step-description">
+          Let's get started by selecting movies or TV shows you want to avoid spoilers for.
+          Choose from popular titles below or search for your own.
+        </p>
+      </div>
+      
+      <div class="step-content">
+        <h3 style="color: #e7ecff; margin-bottom: 15px;">Popular Titles:</h3>
+        <div class="popular-titles" id="popularTitles">
+          <!-- Will be populated by JS -->
+        </div>
+        
+        <div style="margin-top: 30px;">
+          <h3 style="color: #e7ecff; margin-bottom: 15px;">Or search for your own:</h3>
+          <div style="display: flex; gap: 10px;">
+            <input type="text" id="onboardingSearch" placeholder="Search for a movie or show..." 
+                   style="flex: 1; padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.3); color: #e7ecff; font-size: 14px;">
+            <button class="btn-onboarding btn-primary" id="onboardingSearchBtn">Search</button>
+          </div>
+          <div id="onboardingResults" style="margin-top: 15px;"></div>
+        </div>
+      </div>
+      
+      <div class="step-actions">
+        <button class="btn-onboarding btn-secondary" id="step1Prev" style="visibility: hidden;">Back</button>
+        <button class="btn-onboarding btn-primary" id="step1Next">Continue</button>
+      </div>
+      
+      <div class="progress-dots">
+        <div class="progress-dot active"></div>
+        <div class="progress-dot"></div>
+        <div class="progress-dot"></div>
+      </div>
+    </div>
+    
+    <!-- Step 2: See It In Action -->
+    <div class="onboarding-step" id="step2">
+      <div class="step-header">
+        <div class="step-number">2</div>
+        <h1 class="step-title">See Spoiler Shield in Action</h1>
+        <p class="step-description">
+          Here's how spoilers will be blurred on websites. Hover or click to reveal them!
+        </p>
+      </div>
+      
+      <div class="step-content">
+        <div class="demo-preview">
+          <p class="demo-text">
+            I just finished watching <span class="demo-blurred" data-blur="Breaking Bad">Breaking Bad</span><span class="demo-label">Blocked</span> 
+            and the ending where <span class="demo-blurred" data-blur="Walter">Walter</span><span class="demo-label">Blocked</span> 
+            was absolutely incredible! Can't believe <span class="demo-blurred" data-blur="Jesse">Jesse</span><span class="demo-label">Blocked</span> 
+            made it out alive.
+          </p>
+          <p class="demo-text">
+            The <span class="demo-blurred" data-blur="Game of Thrones">Game of Thrones</span><span class="demo-label">Blocked</span> 
+            finale had so many shocking moments, especially when 
+            <span class="demo-blurred" data-blur="Jon Snow">Jon Snow</span><span class="demo-label">Blocked</span> 
+            revealed his true identity.
+          </p>
+          <p style="color: #667eea; font-size: 14px; margin-top: 20px; text-align: center;">
+            ✨ Try hovering or clicking on the blurred text above!
+          </p>
+        </div>
+        
+        <div style="background: rgba(102, 126, 234, 0.1); border-radius: 12px; padding: 20px; margin-top: 20px;">
+          <h4 style="color: #e7ecff; margin-bottom: 10px;">💡 How It Works:</h4>
+          <ul style="color: #98a2c8; line-height: 1.8;">
+            <li>Spoilers are automatically detected and blurred across all websites</li>
+            <li>Hover to preview, click to permanently reveal</li>
+            <li>Works on text, images, and even video thumbnails</li>
+            <li>The extension learns from your behavior to improve over time</li>
+          </ul>
+        </div>
+      </div>
+      
+      <div class="step-actions">
+        <button class="btn-onboarding btn-secondary" id="step2Prev">Back</button>
+        <button class="btn-onboarding btn-primary" id="step2Next">Continue</button>
+      </div>
+      
+      <div class="progress-dots">
+        <div class="progress-dot"></div>
+        <div class="progress-dot active"></div>
+        <div class="progress-dot"></div>
+      </div>
+    </div>
+    
+    <!-- Step 3: Keyboard Shortcuts & Finish -->
+    <div class="onboarding-step" id="step3">
+      <div class="step-header">
+        <div class="step-number">3</div>
+        <h1 class="step-title">Pro Tips & Shortcuts</h1>
+        <p class="step-description">
+          Master Spoiler Shield with these handy keyboard shortcuts and features.
+        </p>
+      </div>
+      
+      <div class="step-content">
+        <h3 style="color: #e7ecff; margin-bottom: 15px;">Keyboard Shortcuts:</h3>
+        <div class="keyboard-shortcuts">
+          <div class="shortcut-item">
+            <span class="shortcut-key">Ctrl + Shift + Y</span>
+            <span class="shortcut-desc">Toggle extension on/off</span>
+          </div>
+          <div class="shortcut-item">
+            <span class="shortcut-key">Ctrl + Shift + U</span>
+            <span class="shortcut-desc">Reprocess current page</span>
+          </div>
+        </div>
+        
+        <h3 style="color: #e7ecff; margin: 30px 0 15px;">Quick Access:</h3>
+        <div style="background: rgba(255, 255, 255, 0.05); border-radius: 12px; padding: 20px;">
+          <ul style="color: #98a2c8; line-height: 2;">
+            <li><strong style="color: #e7ecff;">Click the extension icon</strong> to search for new titles</li>
+            <li><strong style="color: #e7ecff;">Right-click any blurred item</strong> to mark it as not a spoiler</li>
+            <li><strong style="color: #e7ecff;">Use "Mark Watched"</strong> to automatically unblock when you finish</li>
+            <li><strong style="color: #e7ecff;">Per-site controls</strong> let you disable on trusted websites</li>
+          </ul>
+        </div>
+        
+        <div style="background: linear-gradient(135deg, rgba(102, 126, 234, 0.2) 0%, rgba(118, 75, 162, 0.2) 100%); 
+                    border-radius: 12px; padding: 25px; margin-top: 30px; text-align: center;">
+          <h3 style="color: #e7ecff; margin-bottom: 10px;">🎉 You're All Set!</h3>
+          <p style="color: #98a2c8; margin-bottom: 20px;">
+            Spoiler Shield is now protecting you across the web. Open any website and start browsing spoiler-free!
+          </p>
+        </div>
+      </div>
+      
+      <div class="step-actions">
+        <button class="btn-onboarding btn-secondary" id="step3Prev">Back</button>
+        <button class="btn-onboarding btn-primary" id="step3Finish">Start Using Spoiler Shield</button>
+      </div>
+      
+      <div class="progress-dots">
+        <div class="progress-dot"></div>
+        <div class="progress-dot"></div>
+        <div class="progress-dot active"></div>
+      </div>
+    </div>
+    
+    <div style="text-align: center; margin-top: 20px;">
+      <button class="btn-skip" id="skipOnboarding">Skip onboarding</button>
+    </div>
+  </div>
+  
+  <script src="onboarding.js"></script>
+</body>
+</html>

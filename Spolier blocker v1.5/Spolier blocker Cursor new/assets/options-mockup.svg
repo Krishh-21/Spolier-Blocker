@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="800" viewBox="0 0 1280 800">
+  <rect width="100%" height="100%" fill="#07121a" />
+  <text x="48" y="64" fill="#e6eef6" font-family="Inter,Segoe UI,Arial" font-size="28" font-weight="700">Options — Spoiler Shield</text>
+  <g transform="translate(48,104)">
+    <rect width="1160" height="600" rx="10" fill="#0f2430" />
+    <text x="24" y="36" fill="#9fb4c8" font-family="Inter" font-size="16">Keywords</text>
+    <g transform="translate(24,56)">
+      <rect width="520" height="40" rx="8" fill="#0b2a36" />
+      <text x="12" y="26" fill="#cfe6f9">add keywords separated by commas</text>
+    </g>
+    <text x="24" y="140" fill="#9fb4c8" font-family="Inter" font-size="16">Per-site rules</text>
+    <g transform="translate(24,160)">
+      <rect width="520" height="40" rx="8" fill="#0b2a36" />
+      <text x="12" y="26" fill="#cfe6f9">example.com — disabled</text>
+    </g>
+  </g>
+</svg>

@@ -1,0 +1,365 @@
+// ===============================
+// ⭐ BACKGROUND SERVICE WORKER ⭐
+// Handles:
+// - Right-click context menu actions
+// - Adding new spoiler keywords
+// - Reporting false-positives
+// - Keyboard shortcuts
+// - Badge (OFF/ON) updates
+// - Reprocessing pages
+// ===============================
+// Optional: Privacy-first telemetry module
+let telemetry = null;
+// Service workers don't have document/DOM - import telemetry directly if needed
+// (Currently telemetry is opt-in and not actively used)
+
+
+
+// ===============================
+// 📌 Create context menu items (runs when extension is installed)
+// ===============================
+chrome.runtime.onInstalled.addListener((details) => {
+
+  // Add text from selection as a custom keyword
+  chrome.contextMenus.create({
+    id: 'spoiler-shield-add-keyword',
+    title: 'Spoiler Shield: Add selected text as keyword',
+    contexts: ['selection']
+  });
+
+  // Report an image or video as a spoiler
+  chrome.contextMenus.create({
+    id: 'spoiler-shield-report-media',
+    title: 'Spoiler Shield: Report media as spoiler',
+    contexts: ['image', 'video']
+  });
+
+  // Report selected text or link as a spoiler
+  chrome.contextMenus.create({
+    id: 'spoiler-shield-report-text',
+    title: 'Spoiler Shield: Report text as spoiler',
+    contexts: ['page', 'link']
+  });
+
+  // Mark something as a false positive (should NOT be a spoiler)
+  chrome.contextMenus.create({
+    id: 'spoiler-shield-false-positive',
+    title: 'Spoiler Shield: Mark as NOT a spoiler',
+    contexts: ['all']
+  });
+
+  // Open a welcome page only on fresh install
+  try {
+    if (details && details.reason === 'install') {
+      chrome.tabs.create({ url: chrome.runtime.getURL('welcome.html') });
+    }
+  } catch (e) {
+    console.debug('Could not open welcome page:', e);
+  }
+});
+
+
+
+// ===============================
+// 📌 Handle clicks on context menu items
+// ===============================
+chrome.contextMenus.onClicked.addListener((info, tab) => {
+
+  // 1️⃣ Add selected text as keyword
+  if (info.menuItemId === 'spoiler-shield-add-keyword' && info.selectionText) {
+    const keyword = info.selectionText.trim();
+    if (!keyword) return;
+    
+    // OPTIMIZATION: Limit keyword length
+    if (keyword.length > 100) return;
+
+    // Save selected keyword into storage
+    chrome.storage.sync.get({ customKeywords: [] }, store => {
+      const set = new Set([...(store.customKeywords || []), keyword]);
+      const keywords = Array.from(set).slice(0, 1000); // Cap at 1000
+      chrome.storage.sync.set({ customKeywords: keywords });
+
+      // Re-run content script on the page
+      if (tab && tab.id) {
+        chrome.scripting.executeScript({ target: { tabId: tab.id }, files: ['content.js'] });
+      }
+    });
+  }
+
+  // 2️⃣ Report media (image/video) as spoiler by extracting filename tokens
+  else if (info.menuItemId === 'spoiler-shield-report-media' && info.srcUrl) {
+    const src = info.srcUrl;
+    const tokens = extractTokensFromUrl(src);
+    if (tokens.length === 0) return;
+
+    chrome.storage.sync.get({ customKeywords: [] }, store => {
+      const set = new Set([...(store.customKeywords || [])]);
+      tokens.forEach(t => set.add(t));
+      const keywords = Array.from(set).slice(0, 1000); // Cap at 1000
+      chrome.storage.sync.set({ customKeywords: keywords });
+
+      // Re-run content script after adding
+      if (tab && tab.id) {
+        chrome.scripting.executeScript({ target: { tabId: tab.id }, files: ['content.js'] });
+      }
+    });
+  }
+
+  // 3️⃣ Report selected text or page text as spoiler
+  else if (info.menuItemId === 'spoiler-shield-report-text') {
+
+    // If user highlighted something → use that
+    const baseText = (info.selectionText || '').trim();
+    if (baseText) {
+      addCustomTokens(baseText, tab);
+      return;
+    }
+
+    // Otherwise fetch text from the element the user right-clicked
+    if (tab && tab.id != null) {
+      chrome.scripting.executeScript({
+        target: { tabId: tab.id, allFrames: false },
+        func: () => {
+          try {
+            const ctx = window.__spoilerShieldCtx || {};
+            const sel = window.getSelection && (window.getSelection().toString() || '');
+            return { text: sel || ctx.text || '', linkText: ctx.linkText || '', href: ctx.href || '' };
+          } catch (e) {
+            return { text: '', linkText: '', href: '' };
+          }
+        }
+      }, results => {
+
+        const res = (results && results[0] && results[0].result) || {};
+        const text = (res.text || res.linkText || '').trim();
+        if (text) addCustomTokens(text, tab);
+      });
+    }
+  }
+
+  // 4️⃣ Mark as false positive
+  else if (info.menuItemId === 'spoiler-shield-false-positive') {
+
+    if (tab && tab.id != null) {
+
+      // Get the spoiler token that triggered the blur
+      chrome.scripting.executeScript({
+        target: { tabId: tab.id, allFrames: false },
+        func: () => {
+          try {
+            const ctx = window.__spoilerShieldCtx || {};
+            const target = ctx.el || null;
+
+            let matched = '';
+            if (target) {
+              const el = target.closest('[data-spoiler-shield="1"]');
+              matched = (el && (el.getAttribute('data-spoiler-why') || '')) || '';
+            }
+            return { matched: matched || (ctx.matched || ''), text: ctx.text || '' };
+          } catch (e) {
+            return { matched: '', text: '' };
+          }
+        }
+      }, results => {
+
+        const res = (results && results[0] && results[0].result) || {};
+        const token = (res.matched || '').trim().toLowerCase();
+        if (!token) return;
+
+        // Save false positive token
+        chrome.storage.sync.get({ falsePositives: [] }, store => {
+          const set = new Set([...(store.falsePositives || [])]);
+          set.add(token);
+
+          chrome.storage.sync.set({ falsePositives: Array.from(set) }, () => {
+            // Reprocess page
+            if (tab && tab.id) {
+              chrome.scripting.executeScript({ target: { tabId: tab.id }, files: ['content.js'] });
+            }
+          });
+        });
+      });
+    }
+  }
+});
+
+
+
+// ===============================
+// 📌 Helper: Add custom tokens from text
+// ===============================
+function addCustomTokens(text, tab) {
+  const tokens = extractTokensFromText(text);
+  if (tokens.length === 0) return;
+
+  // Save keywords
+  chrome.storage.sync.get({ customKeywords: [] }, store => {
+    const set = new Set([...(store.customKeywords || [])]);
+    tokens.forEach(t => set.add(t));
+
+    const keywords = Array.from(set).slice(0, 1000); // Cap at 1000
+    chrome.storage.sync.set({ customKeywords: keywords }, () => {
+
+      // Reprocess page after adding new keywords
+      if (tab && tab.id) {
+        chrome.scripting.executeScript({ target: { tabId: tab.id }, files: ['content.js'] });
+      }
+    });
+  });
+}
+
+
+
+// ===============================
+// 📌 Keyboard Shortcuts Listener
+// ===============================
+chrome.commands.onCommand.addListener(async command => {
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  if (!tab || !tab.id) return;
+
+  // Toggle ON/OFF
+  if (command === 'toggle-spoiler-shield') {
+    chrome.storage.sync.get({ settings: { enabled: true } }, store => {
+      const settings = store.settings || { enabled: true };
+      settings.enabled = !settings.enabled;
+
+      chrome.storage.sync.set({ settings }, () => {
+        chrome.scripting.executeScript({ target: { tabId: tab.id }, files: ['content.js'] });
+
+        // Show "OFF" badge if disabled
+        chrome.action.setBadgeText({ text: settings.enabled ? '' : 'OFF', tabId: tab.id });
+      });
+    });
+  }
+
+  // Reprocess the page for spoilers
+  else if (command === 'reprocess-page') {
+    chrome.scripting.executeScript({ target: { tabId: tab.id }, files: ['content.js'] });
+  }
+});
+
+
+
+// ===============================
+// 📌 Listen for messages (e.g., from popup/options)
+// ===============================
+chrome.runtime.onMessage.addListener((msg, sender) => {
+  if (msg && msg.type === 'spoiler-reprocess') {
+
+    // Re-run content script on current tab
+    if (sender && sender.tab && sender.tab.id) {
+      // Prefer message-based reprocess (no reinjection); fallback to executeScript.
+      chrome.tabs.sendMessage(sender.tab.id, { type: 'spoiler-reprocess' }, () => {
+        if (chrome.runtime.lastError) {
+          chrome.scripting.executeScript({ target: { tabId: sender.tab.id }, files: ['content.js'] });
+        }
+      });
+
+    } else {
+      chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
+        if (tabs[0] && tabs[0].id) {
+          chrome.tabs.sendMessage(tabs[0].id, { type: 'spoiler-reprocess' }, () => {
+            if (chrome.runtime.lastError) {
+              chrome.scripting.executeScript({ target: { tabId: tabs[0].id }, files: ['content.js'] });
+            }
+          });
+        }
+      });
+    }
+  }
+});
+
+
+
+// ===============================
+// 📌 Update badge when tab changes or reloads
+// ===============================
+chrome.tabs.onActivated.addListener(async activeInfo => {
+  const tab = await chrome.tabs.get(activeInfo.tabId);
+  updateBadgeForTab(tab);
+});
+
+chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+  if (changeInfo.status === 'complete') updateBadgeForTab(tab);
+});
+
+
+
+// ===============================
+// 📌 Show OFF badge if extension disabled on this site
+// ===============================
+function updateBadgeForTab(tab) {
+  if (!tab || !tab.id) return;
+
+  chrome.storage.sync.get({ settings: { enabled: true, excludeDomains: [], includeDomains: [], perSite: {} } }, store => {
+    const enabled = evaluateEnablementForHost(store.settings, extractHost(tab.url || ''));
+
+    chrome.action.setBadgeBackgroundColor({ color: '#6a5acd', tabId: tab.id });
+    chrome.action.setBadgeText({ text: enabled ? '' : 'OFF', tabId: tab.id });
+  });
+}
+
+
+
+// ===============================
+// 📌 Evaluate if extension should run on this domain
+// ===============================
+function evaluateEnablementForHost(settings, host) {
+  if (!settings.enabled) return false;
+
+  if (settings.excludeDomains && settings.excludeDomains.some(d => host.endsWith(d))) return false;
+
+  if (settings.includeDomains && settings.includeDomains.length > 0) {
+    return settings.includeDomains.some(d => host.endsWith(d));
+  }
+
+  if (settings.perSite && Object.prototype.hasOwnProperty.call(settings.perSite, host)) {
+    return Boolean(settings.perSite[host]);
+  }
+
+  return true;
+}
+
+
+
+// ===============================
+// 📌 Helpers to extract tokens
+// ===============================
+
+// Extract words from image/video URL filenames
+function extractTokensFromUrl(url) {
+  try {
+    // SECURITY: Limit URL length to prevent DoS
+    const safeUrl = String(url).slice(0, 2048);
+    const u = new URL(safeUrl);
+    
+    // SECURITY: Only process http/https URLs
+    if (!['http:', 'https:'].includes(u.protocol)) {
+      return [];
+    }
+    
+    const path = decodeURIComponent(u.pathname || '');
+    const filename = path.split('/').pop() || '';
+    const nameNoExt = filename.replace(/\.[a-z0-9]+$/i, '');
+    const raw = (nameNoExt + ' ' + path).toLowerCase();
+
+    // Split into tokens
+    const tokens = raw.split(/[^a-z0-9]+/i)
+      .filter(t => t && t.length >= 4 && t.length <= 24);
+
+    return Array.from(new Set(tokens)).slice(0, 8);
+  } catch {
+    return [];
+  }
+}
+
+// Extract words from selected text - minimum 5 characters to reduce noise
+function extractTokensFromText(text) {
+  // SECURITY: Limit input length to prevent DoS
+  const safeText = String(text).slice(0, 10000);
+  const raw = safeText.toLowerCase();
+  const tokens = raw.split(/[^a-z0-9]+/i)
+    .filter(t => t && t.length >= 5 && t.length <= 24);
+
+  return Array.from(new Set(tokens)).slice(0, 12);
+}

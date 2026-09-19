@@ -1,0 +1,170 @@
+{
+  "appName": {
+    "message": "Spoiler Shield",
+    "description": "The extension name"
+  },
+  "appDescription": {
+    "message": "Blocks spoilers for movies, TV shows, and games by blurring matching text and images",
+    "description": "The extension description"
+  },
+  "extensionEnabled": {
+    "message": "Extension enabled",
+    "description": "Label for global enable toggle"
+  },
+  "enableSpoilerShield": {
+    "message": "Enable Spoiler Shield",
+    "description": "Button label to enable extension"
+  },
+  "disableSpoilerShield": {
+    "message": "Disable Spoiler Shield",
+    "description": "Button label to disable extension"
+  },
+  "openSettings": {
+    "message": "Open Settings",
+    "description": "Button to open options page"
+  },
+  "toggleOnThisSite": {
+    "message": "Enabled on this site",
+    "description": "Toggle label for site-specific setting"
+  },
+  "generalSettings": {
+    "message": "General",
+    "description": "Tab label for general settings"
+  },
+  "filterSettings": {
+    "message": "Filters",
+    "description": "Tab label for filter/keyword settings"
+  },
+  "permissionsSettings": {
+    "message": "Permissions",
+    "description": "Tab label for permission settings"
+  },
+  "advancedSettings": {
+    "message": "Advanced",
+    "description": "Tab label for advanced settings"
+  },
+  "diagnosticsSettings": {
+    "message": "Diagnostics",
+    "description": "Tab label for diagnostics"
+  },
+  "blurStrength": {
+    "message": "Blur Strength (Pixels)",
+    "description": "Label for blur radius slider"
+  },
+  "blurStyle": {
+    "message": "Blur Style",
+    "description": "Label for blur type selection"
+  },
+  "gaussianBlur": {
+    "message": "Gaussian blur",
+    "description": "Blur style option"
+  },
+  "pixelate": {
+    "message": "Pixelate",
+    "description": "Blur style option"
+  },
+  "solidMask": {
+    "message": "Solid mask",
+    "description": "Blur style option"
+  },
+  "overlayColor": {
+    "message": "Overlay Color",
+    "description": "Label for color picker"
+  },
+  "searchMedia": {
+    "message": "Search Media",
+    "description": "Label for media search feature"
+  },
+  "selectMediaType": {
+    "message": "Select media type",
+    "description": "Aria label for media type dropdown"
+  },
+  "movie": {
+    "message": "Movie",
+    "description": "Media type option"
+  },
+  "tvShow": {
+    "message": "TV Show",
+    "description": "Media type option"
+  },
+  "game": {
+    "message": "Game",
+    "description": "Media type option"
+  },
+  "searchButton": {
+    "message": "Search",
+    "description": "Button label for search"
+  },
+  "selectedTitles": {
+    "message": "Selected Titles",
+    "description": "Section header for selected watch list"
+  },
+  "quickAddKeyword": {
+    "message": "Quick add keyword",
+    "description": "Label for quick keyword input"
+  },
+  "addButton": {
+    "message": "Add",
+    "description": "Button label to add keyword"
+  },
+  "reprocessPage": {
+    "message": "Reprocess",
+    "description": "Button to rescan current page"
+  },
+  "revealAll": {
+    "message": "Reveal all",
+    "description": "Button to reveal all blurred items"
+  },
+  "hideAll": {
+    "message": "Hide all",
+    "description": "Button to hide all blurred items"
+  },
+  "saveSettings": {
+    "message": "Save Settings",
+    "description": "Button to save options"
+  },
+  "settingsSaved": {
+    "message": "Settings saved successfully",
+    "description": "Success message after saving"
+  },
+  "permissionRequested": {
+    "message": "Permission requested. Please update settings.",
+    "description": "Message when permission is requested"
+  },
+  "privacyPolicy": {
+    "message": "Privacy & Data",
+    "description": "Link label for privacy policy"
+  },
+  "noKeywordsAdded": {
+    "message": "No keywords added yet",
+    "description": "Empty state message for keyword list"
+  },
+  "addKeywordPlaceholder": {
+    "message": "Add keyword or phrase...",
+    "description": "Placeholder for keyword input"
+  },
+  "revealOnHover": {
+    "message": "Reveal on hover",
+    "description": "Setting label for hover behavior"
+  },
+  "revealOnClick": {
+    "message": "Reveal on click",
+    "description": "Setting label for click behavior"
+  },
+  "revealOnDoubleClick": {
+    "message": "Reveal on double-click",
+    "description": "Setting label for double-click behavior"
+  },
+  "matchWordBoundaries": {
+    "message": "Match word boundaries",
+    "description": "Setting label for word boundary matching"
+  },
+  "reinforceLearning": {
+    "message": "Enable learning adjustments",
+    "description": "Setting label for RL model"
+  },
+  "helpText": {
+    "message": "If you need help, open the extension popup or visit the support page.",
+    "description": "Help text in welcome page"
+  }
+}

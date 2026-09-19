@@ -1,0 +1,271 @@
+=====================================================
+SPOILER SHIELD V3.7 - QUICK TESTING GUIDE
+=====================================================
+
+LOAD EXTENSION → OPEN DEVTOOLS → RUN TESTS
+
+=====================================================
+TEST 1: CHECK STATUS
+=====================================================
+
+Run in console:
+window.__V3_STATUS()
+
+✅ SUCCESS if you see:
+{
+  createProcessorCalls: > 0,
+  processTextCalls: > 0,
+  blurCalls: > 0,
+  blockBlurs: >= 0,              // New in V3.7
+  spanBlurs: >= 0,               // New in V3.7
+  escalatedBlocks: >= 0,         // New in V3.7
+  spoilerLeakagePrevented: >= 0, // New in V3.7
+  v3Active: true,
+  bridgeLoaded: true
+}
+
+❌ FAILURE if:
+- createProcessorCalls = 0
+- processTextCalls = 0
+- v3Active = false
+
+=====================================================
+TEST 2: BLOCK-LEVEL BLUR TEST
+=====================================================
+
+Run in console:
+window.__V3_TEST()
+
+What happens:
+1. Yellow box appears with 5 spoiler sentences
+2. Extension analyzes the content
+3. Block-level blur should be applied
+4. Results shown in console after 1 second
+
+✅ SUCCESS if console shows:
+"✅ TEST PASSED: Block-level blur applied"
+AND
+blockBlurs: > 0
+escalatedBlocks: > 0
+
+⚠️ PARTIAL if console shows:
+"⚠️ PARTIAL: Some blurring occurred, but not block-level"
+(Means span-level blur worked but escalation didn't trigger)
+
+❌ FAILURE if console shows:
+"❌ TEST FAILED: No spoiler detection"
+
+=====================================================
+TEST 3: REAL-WORLD SPOILER ARTICLE
+=====================================================
+
+1. Go to any article about a show you're tracking
+2. Find an article with spoilers (e.g., "Avengers Endgame ending explained")
+3. Open DevTools Console
+4. Run: window.__V3_STATUS()
+
+Expected Results:
+
+For high-density spoiler articles:
+- blockBlurs: > 0
+- escalatedBlocks: > 0
+- spoilerLeakagePrevented: > 0
+
+Console logs should show:
+[V3.7 ESCALATION] High signal count: X
+[V3.7 ESCALATION] High spoiler density: X%
+[V3.7 BLOCK BLUR] Blurring: DIV with X signals
+
+Visual Result:
+- Entire paragraphs/sections blurred
+- Not just individual words
+- Overlay shows "⚠️ Spoiler Block (X signals, X% density)"
+
+=====================================================
+TEST 4: AI RESPONSE SPOILER REQUEST
+=====================================================
+
+If testing on ChatGPT or similar:
+1. Ask: "Tell me spoilers for [your tracked show]"
+2. AI response should be analyzed
+3. Entire response block should blur
+
+Expected:
+- blockType: "aiResponse" or "spoilerRequest"
+- blurEntireBlock: true
+- Entire response blurred
+
+=====================================================
+TEST 5: SINGLE SPOILER (SPAN-LEVEL)
+=====================================================
+
+Find a page with isolated spoiler:
+"Walter White dies in the finale"
+
+Expected:
+- spanBlurs: > 0
+- blockBlurs: 0 (no escalation)
+- Only the spoiler phrase blurred
+- Rest of text visible
+
+This is correct behavior - no escalation needed for single spoiler.
+
+=====================================================
+CONSOLE COMMANDS REFERENCE
+=====================================================
+
+window.__V3_STATUS()
+→ Show all metrics including block-level stats
+
+window.__V3_TEST()
+→ Run automated block-level blur test
+
+window.testV3.debug()
+→ Show V3 integration diagnostics
+
+window.testV3.analyze("text", ["Title"])
+→ Test detection on specific text
+
+window.testV3.stats()
+→ Show performance statistics
+
+=====================================================
+DEBUGGING ESCALATION LOGIC
+=====================================================
+
+If block blurs aren't triggering, check:
+
+1. Are you tracking the media?
+   - Go to Options → Media Library
+   - Verify the show/movie is selected
+
+2. Is the content relevant?
+   - Text must mention tracked titles
+   - Or contain character names
+
+3. Check escalation thresholds:
+   - Needs 3+ signals OR
+   - Needs 2+ major signals OR
+   - Needs 25%+ spoiler density
+
+4. Check console logs:
+   Look for: [V3.7 ESCALATION] messages
+   If missing → escalation not triggered
+   If present → escalation triggered
+
+5. Inspect blurred elements:
+   Right-click blurred content → Inspect
+   Look for attributes:
+   - data-spoiler-block-blur="true"
+   - data-spoiler-signal-count="X"
+   - data-spoiler-density="X"
+
+=====================================================
+PERFORMANCE CHECK
+=====================================================
+
+Run: window.testV3.stats()
+
+Look for:
+{
+  avgProcessingTime: < 15ms,  // Should be under 15ms
+  detectorStats: {
+    blockSpoilersDetected: X,
+    spanSpoilersDetected: X,
+    escalatedBlocks: X
+  }
+}
+
+If avgProcessingTime > 15ms:
+- Performance degradation
+- May need optimization
+
+If < 15ms:
+- ✅ Performance target met
+
+=====================================================
+EXPECTED BEHAVIOR SUMMARY
+=====================================================
+
+LOW SPOILER DENSITY (1-2 signals):
+→ Span-level blur only
+→ spanBlurs++
+→ Precise blurring
+
+MEDIUM SPOILER DENSITY (3+ signals):
+→ Block-level escalation
+→ blockBlurs++
+→ escalatedBlocks++
+→ Entire paragraph/section blurred
+
+HIGH SPOILER DENSITY (5+ signals, 40%+ density):
+→ Aggressive block-level escalation
+→ spoilerLeakagePrevented++
+→ Multiple blocks blurred
+→ NO SPOILER LEAKAGE
+
+AI SPOILER RESPONSE:
+→ Immediate block-level blur
+→ blockType detected
+→ Entire response hidden
+
+SAFE CONTENT:
+→ No blur
+→ All counters = 0
+→ Text visible
+
+=====================================================
+TROUBLESHOOTING
+=====================================================
+
+PROBLEM: createProcessorCalls = 0
+FIX: V3 not loading. Check manifest.json script order.
+
+PROBLEM: processTextCalls = 0
+FIX: V3 loaded but not processing. Check bridge initialization.
+
+PROBLEM: blurCalls = 0
+FIX: Processing but not detecting. Add media to track list.
+
+PROBLEM: blockBlurs = 0, but should escalate
+FIX: Check escalation thresholds. May need 3+ signals.
+
+PROBLEM: Everything = 0
+FIX: 
+1. Reload page
+2. Check console for errors
+3. Verify V3 files loaded
+4. Run window.__V3_TEST()
+
+=====================================================
+VERIFICATION CHECKLIST
+=====================================================
+
+□ Extension loaded without errors
+□ V3.7 scripts loaded (check manifest.json)
+□ Media is tracked in Options
+□ window.__V3_STATUS() returns data
+□ createProcessorCalls > 0
+□ processTextCalls > 0
+□ window.__V3_TEST() passes
+□ Block blurs occur on spoiler-heavy pages
+□ Span blurs occur on low-density pages
+□ No spoiler leakage observed
+□ Processing time < 15ms
+□ Console shows escalation logs
+
+=====================================================
+REPORTING ISSUES
+=====================================================
+
+If block-level blur isn't working:
+
+1. Capture window.__V3_STATUS() output
+2. Check console for [V3.7 ESCALATION] logs
+3. Note the content that should be blurred
+4. Count signals manually (dies, ending, twist, etc.)
+5. Check if 3+ signals present
+6. Verify media is tracked
+7. Run window.__V3_TEST() and report result
+
+=====================================================

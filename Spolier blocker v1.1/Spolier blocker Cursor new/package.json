@@ -1,0 +1,11 @@
+{
+  "name": "spoiler-shield-assets",
+  "version": "1.0.0",
+  "description": "Asset conversion utilities for Spoiler Shield extension (SVG -> PNG)",
+  "scripts": {
+    "convert-assets": "node scripts/convert-assets.js"
+  },
+  "devDependencies": {
+    "sharp": "0.33.2"
+  }
+}
