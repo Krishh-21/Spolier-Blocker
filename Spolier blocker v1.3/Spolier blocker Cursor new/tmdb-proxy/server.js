@@ -83,6 +83,9 @@ app.get('/3/*', async (req, res) => {
 
     const upstream = await fetch(tmdbUrl, {
       method: 'GET',
+      timeout: 8000,
+      size: 2000000,
+      redirect: 'error',
       headers: {
         'Accept': 'application/json',
         'User-Agent': 'Spoiler-Shield-Proxy/1.0'
@@ -95,42 +98,17 @@ app.get('/3/*', async (req, res) => {
        .set('Cache-Control', 'public, max-age=3600')
        .send(text);
   } catch (e) {
-    console.error('Proxy error:', e.message);
+    console.error('Proxy upstream request failed');
     res.status(502).json({ error: 'Upstream request failed' });
   }
 });
 
-// Health check endpoint with TMDB API connectivity test
-app.get('/health', async (req, res) => {
-  const health = {
-    status: 'ok',
-    timestamp: new Date().toISOString(),
-    tmdbConfigured: !!TMDB_KEY,
-    tmdbReachable: false
-  };
-  
-  // Test TMDB API connectivity
-  if (TMDB_KEY) {
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 3000);
-      
-      const testResponse = await fetch(
-        `https://api.themoviedb.org/3/configuration?api_key=${TMDB_KEY}`,
-        { signal: controller.signal }
-      );
-      clearTimeout(timeoutId);
-      
-      health.tmdbReachable = testResponse.ok;
-    } catch (error) {
-      health.tmdbReachable = false;
-      health.tmdbError = error.message;
-    }
-  }
-  
-  // Return 503 if unhealthy, 200 if healthy
-  const statusCode = (health.tmdbConfigured && health.tmdbReachable) ? 200 : 503;
-  res.status(statusCode).json(health);
+// Public health is local: never spend upstream quota or disclose key-bearing errors.
+app.get('/health', (req, res) => {
+  const ready = Boolean(TMDB_KEY);
+  res.status(ready ? 200 : 503).set('Cache-Control', 'no-store').json({
+    status: ready ? 'ok' : 'unconfigured', tmdbConfigured: ready
+  });
 });
 
 // Legacy health check (keep for backwards compatibility)

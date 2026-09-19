@@ -485,49 +485,7 @@ function extractHost(url) {
 // 🌐 LANDING PAGE SYNC - Message Handlers
 // ===============================
 
-// Handle messages from landing page
-chrome.runtime.onMessageExternal.addListener((request, sender, sendResponse) => {
-  console.log('[Background] External message received:', request);
-  
-  if (request.type === 'ping') {
-    sendResponse({ success: true, extensionId: chrome.runtime.id });
-    return true;
-  }
-  
-  if (request.type === 'getUserAccount') {
-    chrome.storage.sync.get(['userAccount'], (data) => {
-      sendResponse({ userAccount: data.userAccount || null });
-    });
-    return true; // Keep channel open for async response
-  }
-  
-  if (request.type === 'openOptions') {
-    chrome.runtime.openOptionsPage();
-    sendResponse({ success: true });
-    return true;
-  }
-  
-  if (request.type === 'signOut') {
-    // Sign out user
-    chrome.storage.sync.get(['userAccount'], (store) => {
-      const token = store.userAccount && store.userAccount.token;
-      if (token) {
-        chrome.identity.removeCachedAuthToken({ token }, () => {
-          chrome.storage.sync.remove(['userAccount'], () => {
-            sendResponse({ success: true });
-          });
-        });
-      } else {
-        chrome.storage.sync.remove(['userAccount'], () => {
-          sendResponse({ success: true });
-        });
-      }
-    });
-    return true;
-  }
-  
-  return false;
-});
+// External account and sign-out messages removed: never disclose OAuth state to websites.
 
 // Inject extension ID into landing page when it loads
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {

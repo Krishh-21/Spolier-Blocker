@@ -429,11 +429,16 @@ function renderWatchedItems(type) {
     filtered.forEach(item => {
       const div = document.createElement('div');
       div.className = 'watched-item';
-      div.innerHTML = `
-        <div class="watched-item-title">${item.title}</div>
-        <div class="watched-item-meta">${item.year || ''} ${item.director ? '• ' + item.director : ''}</div>
-        <button class="remove-watched" data-id="${item.id}">Remove</button>
-      `;
+      const titleNode = document.createElement('div');
+      titleNode.className = 'watched-item-title';
+      titleNode.textContent = String(item.title || '');
+      const metaNode = document.createElement('div');
+      metaNode.className = 'watched-item-meta';
+      metaNode.textContent = [item.year, item.director].filter(Boolean).join(' • ');
+      const removeNode = document.createElement('button');
+      removeNode.className = 'remove-watched';
+      removeNode.textContent = 'Remove';
+      div.replaceChildren(titleNode, metaNode, removeNode);
       
       div.querySelector('.remove-watched').addEventListener('click', () => {
         removeWatchedItem(item.id);
@@ -932,10 +937,16 @@ function renderSelectedTitles(items) {
   items.forEach(item => {
     const div = document.createElement('div');
     div.className = 'watched-item';
-    div.innerHTML = `
-      <div class="watched-item-title">${item.title}</div>
-      <button class="remove-watched" data-title="${item.title}">Remove</button>
-    `;
+    const titleNode = document.createElement('div');
+      titleNode.className = 'watched-item-title';
+      titleNode.textContent = String(item.title || '');
+      const metaNode = document.createElement('div');
+      metaNode.className = 'watched-item-meta';
+      metaNode.textContent = [item.year, item.director].filter(Boolean).join(' • ');
+      const removeNode = document.createElement('button');
+      removeNode.className = 'remove-watched';
+      removeNode.textContent = 'Remove';
+      div.replaceChildren(titleNode, metaNode, removeNode);
     
     div.querySelector('.remove-watched').addEventListener('click', () => {
       chrome.storage.sync.get({ selectedMedia: [] }, store => {
@@ -961,7 +972,7 @@ document.getElementById('importFile').addEventListener('change', importSettings)
 
 function exportSettings() {
   chrome.storage.sync.get(null, data => {
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const blob = new Blob([JSON.stringify(sanitizeLegacyBackup(data), null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -975,11 +986,12 @@ function importSettings() {
   const input = document.getElementById('importFile');
   const file = input && input.files && input.files[0];
   if (!file) return;
+  if (file.size > 1000000) { alert('Backup exceeds 1 MB.'); return; }
 
   const reader = new FileReader();
   reader.onload = () => {
     try {
-      const data = JSON.parse(String(reader.result || '{}'));
+      const data = sanitizeLegacyBackup(JSON.parse(String(reader.result || '{}')));
       chrome.storage.sync.set(data, () => {
         const status = document.getElementById('status');
         status.textContent = 'Imported';
@@ -1200,6 +1212,7 @@ function importSettings() {
   input.onchange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
+  if (file.size > 1000000) { alert('Backup exceeds 1 MB.'); return; }
     
     const reader = new FileReader();
     reader.onload = (event) => {
@@ -1231,7 +1244,7 @@ function importSettings() {
           watchedKeywords: importData.watchedKeywords || {}
         };
         
-        chrome.storage.sync.set(dataToImport, () => {
+        chrome.storage.sync.set(sanitizeLegacyBackup(dataToImport), () => {
           showStatus('✅ Settings imported successfully! Refreshing...', false);
           setTimeout(() => {
             location.reload();
@@ -1846,3 +1859,26 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 console.log('[Options] Landing page link initialized');
+
+// Compatibility hardening only. New releases are built from /extension.
+function sanitizeLegacyBackup(data) {
+  if (!data || typeof data !== 'object' || Array.isArray(data)) throw new Error('Invalid backup');
+  const raw = data.settings && typeof data.settings === 'object' ? data.settings : {};
+  const settings = {};
+  for (const key of ['enabled','blurImages','showOverlay','revealOnHover','revealOnClick','revealOnDblClick','matchWordBoundaries','reinforceLearning']) {
+    if (typeof raw[key] === 'boolean') settings[key] = raw[key];
+  }
+  for (const [key,min,max] of [['blurRadiusPx',1,40],['reblurAfterMs',0,300000],['aggressiveness',0,3],['rlThreshold',0,1],['spoilerThreshold',0,1]]) {
+    if (Number.isFinite(raw[key])) settings[key] = Math.max(min,Math.min(max,raw[key]));
+  }
+  for (const key of ['overlayColor','overlayTextColor']) if (typeof raw[key] === 'string' && /^#[0-9a-f]{6}$/i.test(raw[key])) settings[key] = raw[key];
+  if (['gaussian','pixelate','redact'].includes(raw.blurStyle)) settings.blurStyle = raw.blurStyle;
+  const strings = (value, limit=1000) => Array.isArray(value) ? value.filter(v => typeof v === 'string').map(v => v.slice(0,160)).slice(0,limit) : [];
+  for (const key of ['includeDomains','excludeDomains']) settings[key] = strings(raw[key],200).filter(v => /^[a-z0-9.-]+$/i.test(v));
+  settings.perSite = {};
+  if (raw.perSite && typeof raw.perSite === 'object') for (const [key,value] of Object.entries(raw.perSite).slice(0,200)) {
+    if (/^[a-z0-9.-]+$/i.test(key) && !['__proto__','constructor','prototype'].includes(key) && typeof value === 'boolean') settings.perSite[key] = value;
+  }
+  const selectedMedia = (Array.isArray(data.selectedMedia) ? data.selectedMedia : []).filter(x => x && typeof x.title === 'string').slice(0,200).map(x => ({title:x.title.slice(0,160),type:['movie','tv','game','anime','sports','awards'].includes(x.type)?x.type:'movie',phrases:strings(x.phrases,120),...(Number.isSafeInteger(x.tmdbId)?{tmdbId:x.tmdbId}:{})}));
+  return {settings,selectedMedia,customKeywords:strings(data.customKeywords),falsePositives:strings(data.falsePositives)};
+}

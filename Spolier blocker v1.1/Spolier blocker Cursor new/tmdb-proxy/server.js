@@ -83,6 +83,9 @@ app.get('/3/*', async (req, res) => {
 
     const upstream = await fetch(tmdbUrl, {
       method: 'GET',
+      timeout: 8000,
+      size: 2000000,
+      redirect: 'error',
       headers: {
         'Accept': 'application/json',
         'User-Agent': 'Spoiler-Shield-Proxy/1.0'
@@ -95,7 +98,7 @@ app.get('/3/*', async (req, res) => {
        .set('Cache-Control', 'public, max-age=3600')
        .send(text);
   } catch (e) {
-    console.error('Proxy error:', e.message);
+    console.error('Proxy upstream request failed');
     res.status(502).json({ error: 'Upstream request failed' });
   }
 });

@@ -382,34 +382,15 @@ async function migrateFromSyncStorage() {
     await saveMetadata('migratedPhrases', migratedPhrases);
     await saveMetadata('migratedWeights', migratedWeights);
     
-    // Clean up sync storage (keep only small settings)
-    const dataToRemove = ['rlWeights'];
-    // Update selectedMedia to remove phrases (keep only IDs and metadata)
-    if (syncData.selectedMedia) {
-      const lightweightMedia = syncData.selectedMedia.map(m => ({
-        id: m.id,
-        title: m.title,
-        name: m.name,
-        media_type: m.media_type,
-        release_date: m.release_date,
-        first_air_date: m.first_air_date,
-        // Remove phrases array (now in IndexedDB)
-      }));
-      await new Promise(resolve => {
-        chrome.storage.sync.set({ selectedMedia: lightweightMedia }, resolve);
-      });
-    }
-    await new Promise(resolve => {
-      chrome.storage.sync.remove(dataToRemove, resolve);
-    });
-    
-    console.log('[Migration] Complete! Freed up sync storage space.');
-    
+    // Preserve source data: the historical content script still consumes sync
+    // phrases, and titles without IDs cannot be copied into IndexedDB safely.
+    console.log('[Migration] Backup complete; source data preserved.');
+
     return {
       success: true,
       migratedPhrases,
       migratedWeights,
-      freedSpace: true
+      freedSpace: false
     };
     
   } catch (error) {
