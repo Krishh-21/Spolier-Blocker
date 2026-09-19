@@ -36,6 +36,24 @@ test('landing is responsive, interactive, and renders without CSP errors', async
   expect(errors).toEqual([]); await page.close();
 });
 
+test('website theme persists across account/admin pages and honors system preferences', async () => {
+  const page = await context.newPage(); await page.goto(base);
+  await page.locator('[data-theme-select]').selectOption('dark');
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+  expect(await page.locator('html').evaluate(el => getComputedStyle(el).backgroundColor)).toBe('rgb(16, 28, 24)');
+  await page.setViewportSize({ width: 1440, height: 1000 }); await page.screenshot({ path: 'test-results/landing-dark.png' });
+  await page.goto(base + '/account'); await expect(page.locator('[data-theme-select]')).toHaveValue('dark');
+  await page.goto(base + '/admin'); await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+  await page.locator('[data-theme-select]').selectOption('light'); await page.reload();
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
+  await page.locator('[data-theme-select]').selectOption('system');
+  await page.emulateMedia({ colorScheme: 'dark' }); await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+  await page.emulateMedia({ colorScheme: 'light' }); await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
+  await page.goto(base); await page.setViewportSize({ width: 390, height: 844 });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.close();
+});
+
 test('admin changes limits and plans; non-admin account never sees admin controls', async () => {
   const page = await context.newPage(); await page.goto(base + '/account');
   await page.locator('#email').fill('admin@example.test'); await page.locator('#password').fill('test-admin-password-only'); await page.locator('#login button').click();

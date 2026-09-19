@@ -155,6 +155,23 @@ test('title suggestions populate aliases and Free quota reports a useful error',
   await expect(page.locator('#status')).toContainText('allows 2');
   await page.close();
 });
+
+test('extension theme persists across popup and settings and follows system changes', async () => {
+  const page = await context.newPage(); await page.goto(`chrome-extension://${extensionId}/options.html`);
+  await page.locator('[data-theme-select]').selectOption('light');
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
+  expect(await page.locator('body').evaluate(el => getComputedStyle(el).backgroundColor)).toBe('rgb(245, 245, 237)');
+  await page.reload(); await expect(page.locator('[data-theme-select]')).toHaveValue('light');
+  const popup = await context.newPage(); await popup.goto(`chrome-extension://${extensionId}/popup.html`);
+  await expect(popup.locator('html')).toHaveAttribute('data-theme', 'light');
+  await popup.locator('[data-theme-select]').selectOption('dark');
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+  await page.locator('[data-theme-select]').selectOption('system');
+  await page.emulateMedia({ colorScheme: 'light' }); await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
+  await page.emulateMedia({ colorScheme: 'dark' }); await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+  await page.screenshot({ path: 'test-results/extension-dark.png', fullPage: true });
+  await page.close(); await popup.close();
+});
 test('each iframe runs protection and per-site exclusions do not match lookalikes', async () => {
   const page = await pageWith('<p id="top">Mira Vale</p><iframe src="https://fixture.example/frame"></iframe>', { customKeywords: ['Mira Vale'], settings: { excludeDomains: ['notfixture.example'] } });
   // Route fulfills both documents; frame markup is bounded to avoid nested iframe creation.

@@ -40,3 +40,7 @@ No episode/chapter progress tracking, live keyword subscription feed, remote AI,
 Native input dropdowns suggest pack titles and keyword aliases. Optional TMDB search shows debounced matching-title suggestions after lookup permission/credentials are configured. The preview popup displays a bounded text-only preview without unmasking the page, follows reveal opt-in, and can be disabled separately on YouTube. It does not fetch external images into the preview. Game-topic presets cover Elden Ring, Baldur’s Gate 3 and The Witcher 3 in addition to The Last of Us.
 
 The website includes an interactive concealment demo, responsive marketing sections, proposed pricing, account registration/sign-in and a protected admin panel. Admins edit literal-keyword limits and assign tiers. Optional extension sign-in supports explicit settings upload/download with revision conflicts. Email recovery/MFA, billing integration and public hosting remain deployment work; see [setup](ACCOUNTS_AND_DEPLOYMENT.md).
+
+## Interface themes
+
+The extension popup, settings and privacy page, plus the landing, account, admin and website privacy pages, support Light, Dark and System themes. System follows device appearance changes. Extension windows share a local preference; website pages share a browser preference. These device-specific choices do not alter website content or consume keyword slots.

@@ -57,12 +57,12 @@ async function createPortal({ database = ':memory:', origin = 'http://127.0.0.1:
       if (req.method === 'OPTIONS') { if (!allowed.has(req.headers.origin)) throw fail(403, 'Origin not allowed.'); res.writeHead(204, headers); return res.end(); }
       if (!url.pathname.startsWith('/api/')) {
         if (req.method !== 'GET' && req.method !== 'HEAD') throw fail(405, 'Method not allowed.');
-        const routes = { '/': 'index.html', '/account': 'account.html', '/admin': 'admin.html', '/site.css': 'site.css', '/site.js': 'site.js', '/account.js': 'account.js', '/admin.js': 'admin.js', '/privacy': 'privacy.html' };
+        const routes = { '/': 'index.html', '/account': 'account.html', '/admin': 'admin.html', '/site.css': 'site.css', '/site.js': 'site.js', '/theme.js': 'theme.js', '/account.js': 'account.js', '/admin.js': 'admin.js', '/privacy': 'privacy.html' };
         const file = routes[url.pathname];
         if (!file) throw fail(404, 'Not found.');
         const mime = { '.html': 'text/html', '.css': 'text/css', '.js': 'text/javascript' }[path.extname(file)];
         res.writeHead(200, { ...headers, 'Content-Type': mime + '; charset=utf-8' });
-        return res.end(req.method === 'HEAD' ? undefined : fs.readFileSync(path.join(__dirname, '../website', file)));
+        return res.end(req.method === 'HEAD' ? undefined : fs.readFileSync(path.join(__dirname, file === 'theme.js' ? '../extension/theme.js' : '../website/' + file)));
       }
       // Cookie-authenticated writes require an exact trusted origin, including sign-in.
       if (['POST', 'PUT', 'DELETE'].includes(req.method) && !allowed.has(req.headers.origin)) throw fail(403, 'Origin not allowed.');

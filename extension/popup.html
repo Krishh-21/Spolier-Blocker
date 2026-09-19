@@ -1,7 +1,7 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Spoiler Shield</title><link rel="stylesheet" href="ui.css"></head>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Spoiler Shield</title><script src="theme.js"></script><link rel="stylesheet" href="ui.css"></head>
 <body class="popup"><main>
-  <header><img src="icon48.png" alt=""><div><p class="eyebrow">Browse on your terms</p><h1>Spoiler Shield</h1></div></header>
+  <header><img src="icon48.png" alt=""><div><p class="eyebrow">Browse on your terms</p><h1>Spoiler Shield</h1></div></header><label class="theme-picker">Theme <select data-theme-select aria-label="Color theme"><option value="system">System</option><option value="light">Light</option><option value="dark">Dark</option></select></label>
   <section><span class="count" id="count">—</span><p class="muted" id="pageStatus">Checking this page…</p><div class="row"><button id="toggle" disabled>Protection</button><button id="site" class="secondary" disabled>Pause site</button></div></section>
   <form id="keywordForm"><label for="keyword">Block a word or phrase</label><div class="row"><input list="keywordSuggestions" id="keyword" maxlength="160" placeholder="Title, character, team…" required><button type="submit">Add</button></div></form><datalist id="keywordSuggestions"></datalist><p id="planStatus" class="muted"></p>
   <p class="muted"><small>Custom keywords always block. Add title packs and tune detection in settings.</small></p>
