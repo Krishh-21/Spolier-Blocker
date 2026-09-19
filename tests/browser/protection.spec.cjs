@@ -31,6 +31,9 @@ async function shadowNodes(page) {
   visit(root); return { client, nodes };
 }
 async function clickShadowButton(page, label) {
+  // The overlay positions itself on animation frames. Wait for a stable painted
+  // layout before reading coordinates, as Playwright's normal click does.
+  await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
   const { client, nodes } = await shadowNodes(page);
   try {
     const node = nodes.find(n => n.nodeName === 'BUTTON' && n.children?.some(c => c.nodeValue.includes(label)));
