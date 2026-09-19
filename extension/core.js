@@ -55,7 +55,7 @@
       seen.add(normalize(title));
       const knowledge = object(item.knowledge) ? item.knowledge : {};
       const names = Array.isArray(knowledge.characters) ? knowledge.characters.flatMap(c => object(c) ? [c.name, ...(Array.isArray(c.aliases) ? c.aliases : [])] : []) : [];
-      selectedMedia.push({ title, type: ['movie', 'tv', 'anime', 'game', 'sports', 'awards', 'other'].includes(item.type) ? item.type : 'other',
+      selectedMedia.push({ title, type: ['movie', 'tv', 'anime', 'game', 'sports', 'awards', 'book', 'other'].includes(item.type) ? item.type : 'other',
         phrases: strings([...(Array.isArray(item.phrases) ? item.phrases : []), ...(Array.isArray(knowledge.aliases) ? knowledge.aliases : []), ...names], LIMITS.phrases),
         ...(Number.isSafeInteger(item.tmdbId) && item.tmdbId > 0 ? { tmdbId: item.tmdbId } : {}) });
     }

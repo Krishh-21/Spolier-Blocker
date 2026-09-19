@@ -1010,3 +1010,12 @@ footer>span {
 [data-theme="dark"] .status.error { color:#ffb5a9; }
 @media(max-width:950px) { .nav { flex-wrap:wrap; height:auto; min-height:106px; padding-block:18px; gap:15px; } .nav-links { gap:12px; } }
 @media(max-width:700px) { .theme-picker { margin-left:auto; } .nav .theme-picker { flex-basis:100%; justify-content:flex-end; } }
+/* Shared violet identity with the extension welcome screen. */
+:root{--mint:#c5b5ff}
+[data-theme="dark"]{--paper:#0b0b10;--ink:#f0eff8;--muted:#aaa5be;--line:#30293f;--mint:#bca8ff}
+.button.dark,.button.mint{background:linear-gradient(110deg,#7366ed,#8050a5);color:white}
+.hero h1 em{color:#987ae5;text-shadow:0 0 24px #9670e540}
+[data-theme="dark"] .featured,[data-theme="dark"] .closing,[data-theme="dark"] .demo-card{background:#211a33;border-color:#635180}
+[data-theme="dark"] .chips span{background:#2e2444;border-color:#635180}
+[data-theme="dark"] .chips span:last-child{background:#493363}
+[data-theme="dark"] .shield-art,[data-theme="dark"] .step-number,[data-theme="dark"] .art-caption{color:#bca8ff}

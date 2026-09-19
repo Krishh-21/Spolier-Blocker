@@ -112,8 +112,25 @@ async function handle(message, sender) {
       const data = await tmdb('search/' + type, { query: message.query.trim(), include_adult: 'false' });
       return { results: (Array.isArray(data.results) ? data.results : []).slice(0, 12).map(item => ({
         tmdbId: item.id, type, title: String(item.title || item.name || '').slice(0, 160),
+        poster: typeof item.poster_path === 'string' && /^\/[a-zA-Z0-9_-]+\.(jpg|png)$/.test(item.poster_path) ? 'https://image.tmdb.org/t/p/w185' + item.poster_path : null,
         year: String(item.release_date || item.first_air_date || '').slice(0, 4)
       })) };
+    }
+    case 'track-title':
+    case 'untrack-title': {
+      if (typeof message.title !== 'string' || !message.title.trim() || message.title.length > C.LIMITS.term) throw new Error('Invalid title.');
+      const pack = SpoilerPacks.find(p => p.id === message.packId || C.normalize(p.title) === C.normalize(message.title));
+      return { config: await mutate(c => {
+        if (message.type === 'untrack-title') {
+          c.selectedMedia = c.selectedMedia.filter(p => C.normalize(p.title) !== C.normalize(message.title));
+          c.enabledPacks = c.enabledPacks.filter(id => id !== pack?.id);
+        } else if (pack) { c.enabledPacks.push(pack.id); }
+        else {
+          if (c.selectedMedia.length >= C.LIMITS.media) throw new Error('Title limit reached.');
+          c.selectedMedia.push({ title: message.title, type: message.mediaType, phrases: [] });
+        }
+        return c;
+      }) };
     }
     case 'track-result': {
       if (!Number.isSafeInteger(message.id) || message.id <= 0 || !['movie', 'tv'].includes(message.mediaType)) throw new Error('Invalid title.');
@@ -139,7 +156,10 @@ chrome.runtime.onInstalled.addListener(async details => {
   await initialize();
   await chrome.contextMenus.removeAll();
   chrome.contextMenus.create({ id: 'add-keyword', title: 'Spoiler Shield: block selected text', contexts: ['selection'] });
-  if (details.reason === 'install') await chrome.runtime.openOptionsPage();
+  if (details.reason === 'install' && !(await chrome.storage.local.get('welcomeShown')).welcomeShown) {
+    await chrome.storage.local.set({ welcomeShown: true });
+    await chrome.tabs.create({ url: chrome.runtime.getURL('spoiler-shield-landing.html') });
+  }
 });
 chrome.contextMenus.onClicked.addListener(info => {
   if (info.menuItemId === 'add-keyword' && typeof info.selectionText === 'string') {

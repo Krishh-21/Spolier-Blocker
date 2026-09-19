@@ -160,11 +160,12 @@ test('extension theme persists across popup and settings and follows system chan
   const page = await context.newPage(); await page.goto(`chrome-extension://${extensionId}/options.html`);
   await page.locator('[data-theme-select]').selectOption('light');
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
-  expect(await page.locator('body').evaluate(el => getComputedStyle(el).backgroundColor)).toBe('rgb(245, 245, 237)');
+  expect(await page.locator('body').evaluate(el => getComputedStyle(el).backgroundColor)).toBe('rgb(245, 243, 252)');
   await page.reload(); await expect(page.locator('[data-theme-select]')).toHaveValue('light');
   const popup = await context.newPage(); await popup.goto(`chrome-extension://${extensionId}/popup.html`);
   await expect(popup.locator('html')).toHaveAttribute('data-theme', 'light');
-  await popup.locator('[data-theme-select]').selectOption('dark');
+  await expect(popup.locator('[data-theme-select]')).toHaveCount(0);
+  await page.locator('[data-theme-select]').selectOption('dark');
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
   await page.locator('[data-theme-select]').selectOption('system');
   await page.emulateMedia({ colorScheme: 'light' }); await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');

@@ -7,7 +7,7 @@ const crypto = require('node:crypto');
 const source = path.resolve(__dirname, '..', 'extension');
 const out = path.resolve(__dirname, '..', 'dist');
 const files = ['manifest.json', 'background.js', 'core.js', 'packs.js', 'content.js', 'content.css', 'accounts.js', 'account-config.js', 'theme.js',
-  'v4-knowledge-engine.js', 'v4-spoiler-detector.js', 'popup.html', 'popup.js', 'options.html', 'options.js', 'privacy.html', 'ui.css', 'tmdb-logo.svg', 'icon16.png', 'icon48.png', 'icon128.png'];
+  'spoiler-shield-landing.html', 'landing.css', 'v4-knowledge-engine.js', 'v4-spoiler-detector.js', 'popup.html', 'popup.js', 'options.html', 'options.js', 'privacy.html', 'ui.css', 'tmdb-logo.svg', 'icon16.png', 'icon48.png', 'icon128.png'];
 function crc32(data) {
   let crc = 0xffffffff;
   for (const byte of data) { crc ^= byte; for (let i = 0; i < 8; i++) crc = (crc >>> 1) ^ (0xedb88320 & -(crc & 1)); }

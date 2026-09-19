@@ -2,7 +2,7 @@
   'use strict';
   if (globalThis.__ss2) { globalThis.__ss2.reload(); return; }
   const C = SpoilerCore;
-  const cards = 'ytd-rich-item-renderer,ytd-video-renderer,ytd-compact-video-renderer,yt-lockup-view-model,ytd-reel-item-renderer,shreddit-post,[data-testid="tweet"],[data-testid="post-container"],article';
+  const cards = 'ytd-rich-item-renderer,ytd-video-renderer,ytd-compact-video-renderer,yt-lockup-view-model,.yt-lockup-view-model,.yt-lockup-view-model-wiz,ytm-video-with-context-renderer,ytm-compact-video-renderer,ytm-shorts-lockup-view-model,yt-shorts-lockup-view-model,ytd-reel-item-renderer,shreddit-post,[data-testid="tweet"],[data-testid="post-container"],article';
   const blocks = 'p,li,blockquote,td,th,h1,h2,h3,h4,h5,h6,figcaption,[role="listitem"]';
   const ignored = 'script,style,noscript,textarea,input,select,option,button,code,pre,svg,canvas,[contenteditable]:not([contenteditable="false"]),[role="textbox"],.ss2-control';
   let current = null, detector = null, legacy = null, active = false;
@@ -16,6 +16,9 @@
   function targetFor(el) {
     if (skipped(el) || ['HTML', 'BODY'].includes(el.tagName)) return null;
     const candidate = el.closest(cards) || el.closest(blocks) || el;
+    // A feed mutation targets the whole results grid. Inspect its individual
+    // cards instead of hiding the grid (and unrelated videos) as one spoiler.
+    if (!candidate.matches(cards) && candidate.querySelector(cards)) return null;
     // A post can contain an inline reply editor. Never hide that editor with its card.
     const editors = 'textarea,input,select,[contenteditable]:not([contenteditable="false"]),[role="textbox"]';
     if (!candidate.querySelector(editors)) return candidate;
@@ -237,6 +240,8 @@
     if (message?.type === 'status') { respond({ count: marked.size, active }); return false; }
   });
   addEventListener('scroll', position, { passive: true, capture: true });
+  document.addEventListener('yt-navigate-finish', () => enqueue(document.body));
+  document.addEventListener('yt-page-data-updated', () => enqueue(document.body));
   addEventListener('resize', position, { passive: true });
   addEventListener('pagehide', stop);
   addEventListener('pageshow', event => { if (event.persisted) reload(); });

@@ -21,7 +21,7 @@ function harness(legacy = {}) {
   vm.createContext(sandbox);
   sandbox.importScripts = (...files) => { for (const file of files) vm.runInContext(fs.readFileSync(path.resolve('extension', file), 'utf8'), sandbox); };
   vm.runInContext(fs.readFileSync('extension/background.js', 'utf8'), sandbox);
-  return { sandbox, local, sync, ui: { id: 'test-id', url: 'chrome-extension://test-id/options.html' }, page: { id: 'test-id', url: 'https://example.com/', tab: { id: 1 }, frameId: 0 } };
+  return { sandbox, local, sync, events, ui: { id: 'test-id', url: 'chrome-extension://test-id/options.html' }, page: { id: 'test-id', url: 'https://example.com/', tab: { id: 1 }, frameId: 0 } };
 }
 test('migration preserves protection and removes synced credentials from page-visible state', async () => {
   const h = harness({ customKeywords: ['Dune'], tmdbKey: 'a'.repeat(32), userAccount: { token: 'secret' }, settings: { enabled: false } });
@@ -90,4 +90,14 @@ test('keyword quotas count entries, preserve existing data, and never trust impo
   await h.sandbox.handle({ type: 'save-config', config: { ...h.local.config, settings: { showReveal: true } } }, h.ui);
   assert.equal(h.local.config.customKeywords.length, 2);
   for (const type of ['account-status', 'account-login', 'account-upload', 'account-download']) await assert.rejects(h.sandbox.handle({ type }, h.page), /only available/);
+});
+
+test('welcome opens only once on install, never on updates', async () => {
+  const h = harness(); const opened = [];
+  h.sandbox.chrome.tabs.create = async tab => opened.push(tab.url);
+  await h.events.installed({ reason: 'install' });
+  await h.events.installed({ reason: 'update' });
+  await h.events.installed({ reason: 'install' });
+  assert.deepEqual(opened, ['chrome-extension://test-id/spoiler-shield-landing.html']);
+  assert.equal(h.local.welcomeShown, true);
 });
