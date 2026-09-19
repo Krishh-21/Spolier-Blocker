@@ -7,7 +7,7 @@
     "test": "node scripts/run-detection-tests.js"
   },
   "devDependencies": {
-    "sharp": "0.33.2"
+    "sharp": "0.35.4"
   },
   "dependencies": {
     "lz-string": "^1.5.0"

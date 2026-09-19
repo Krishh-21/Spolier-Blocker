@@ -1,0 +1,7 @@
+# Keep release bytes identical across Windows and Linux checkouts.
+extension/** text eol=lf
+extension/*.png -text
+scripts/** text eol=lf
+tests/** text eol=lf
+# Preserve the sealed scan artifacts byte-for-byte, including quoted evidence.
+docs/security-baseline/** -text -whitespace

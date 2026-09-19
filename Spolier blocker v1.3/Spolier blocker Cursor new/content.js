@@ -537,17 +537,9 @@ function addOverlay(hostEl, why) {
 }
 
 function collectMatchedTitles() {
-  try {
-    const titles = [];
-    const items = JSON.parse(sessionStorage.getItem('__spoilerSelectedTitles') || 'null');
-    if (Array.isArray(items)) return items;
-    // fallback read from storage once per page
-    chrome.storage.sync.get({ selectedMedia: [] }, store => {
-      const arr = (store.selectedMedia || []).map(i => i.title).filter(Boolean);
-      sessionStorage.setItem('__spoilerSelectedTitles', JSON.stringify(arr));
-    });
-    return titles;
-  } catch { return []; }
+  // Page sessionStorage is readable by the visited site. Never cache the watchlist there.
+  try { sessionStorage.removeItem('__spoilerSelectedTitles'); } catch {}
+  return [];
 }
 
 function extractRelevantText(root) {

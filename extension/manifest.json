@@ -1,0 +1,26 @@
+{
+  "manifest_version": 3,
+  "name": "Spoiler Shield",
+  "version": "2.0.0",
+  "minimum_chrome_version": "120",
+  "description": "Protect titles, characters and keywords locally. Hide spoiler text and related thumbnails with deliberate reveal controls.",
+  "permissions": ["storage", "contextMenus", "activeTab"],
+  "optional_host_permissions": ["https://api.themoviedb.org/*"],
+  "background": { "service_worker": "background.js" },
+  "action": { "default_popup": "popup.html", "default_icon": { "16": "icon16.png", "48": "icon48.png", "128": "icon128.png" } },
+  "options_page": "options.html",
+  "icons": { "16": "icon16.png", "48": "icon48.png", "128": "icon128.png" },
+  "content_scripts": [{
+    "matches": ["http://*/*", "https://*/*"],
+    "js": ["packs.js", "core.js", "v4-knowledge-engine.js", "v4-spoiler-detector.js", "content.js"],
+    "css": ["content.css"],
+    "run_at": "document_start",
+    "all_frames": true
+  }],
+  "content_security_policy": { "extension_pages": "script-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'" },
+  "commands": {
+    "toggle-spoiler-shield": { "suggested_key": { "default": "Ctrl+Shift+Y" }, "description": "Toggle protection" },
+    "reprocess-page": { "suggested_key": { "default": "Ctrl+Shift+U" }, "description": "Rescan this page" }
+  },
+  "homepage_url": "https://github.com/Krishh-21/Spolier-Blocker"
+}

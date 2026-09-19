@@ -1,0 +1,105 @@
+{
+  "documentType": "codex-security.scan-manifest",
+  "scan": {
+    "artifacts": [
+      {
+        "mediaType": "application/json",
+        "path": "findings.json",
+        "sha256": "9c30a3a6edecaca29188a24d1ec15991ac6245a658a4748b9a0cf82cf03d5bfe"
+      },
+      {
+        "mediaType": "application/json",
+        "path": "coverage.json",
+        "sha256": "907a64177bbc95b31e17abb1b7ea7995c634ae1cf6d6714b2c88bbc4151113e6"
+      }
+    ],
+    "completedAt": "2026-09-19T13:31:12.253835Z",
+    "coverageRef": "coverage.json",
+    "findingsRef": "findings.json",
+    "id": "f03116a8-2771-49df-9abd-ed95925cf020",
+    "preservedSources": {
+      "checkpoints/18fde38a85525e3edde3f9727cd253e3d84f7429348fc47e2676d6bfab828e8e.json": "93fd592bc379cbe186c3a81b212ead9171c9d1c2f1e57c4a8dc5561e9c3dd52a",
+      "checkpoints/4ced7d1cfc2fecccbe89b62ef69da8e2f11ac7891d420831169e984213691763.json": "a2466791dd6c648402371ece371c59af861274f62fa2f1f3bc6b2bb3c53df0be",
+      "checkpoints/8ecd87e7cbad7dc2f069a0d001346352cf95b7279973ebd18bb618afce375074.json": "8ecd87e7cbad7dc2f069a0d001346352cf95b7279973ebd18bb618afce375074",
+      "checkpoints/e52a560e521c47fdcc1c4e63f8dd7d9511ca76dcaa83289db733b8776f8608e1.json": "f110b5392870b4a42210e988b90393da980b6427894499d22028b611a1cbc402"
+    },
+    "producer": {
+      "name": "codex-security-plugin",
+      "version": "0.1.24"
+    },
+    "scope": {
+      "artifactsReviewed": [
+        "Seven manifest variants and active background/content/options/popup flows",
+        "Unique knowledge engines, detector/integration variants and TMDB/Wikipedia builders",
+        "All unique proxy server implementations and package manifests/lock inventory",
+        "IndexedDB migration, onboarding, i18n, local compression, benchmark and asset-conversion tools"
+      ],
+      "excludePaths": [],
+      "includePaths": [
+        "."
+      ],
+      "limitations": [
+        "Coverage is partial: binary assets, historical ZIP contents, all prose documentation and transitive dependency source were not exhaustively reviewed.",
+        "No deployed proxy, configured OAuth client or real credentials were exercised. Exploit prerequisites and CSP limits are retained in each finding.",
+        "New extension/ release code and subsequent patches are not the immutable baseline covered by these findings; see release regression tests and remediation documentation.",
+        "This is one Standard scan, not a multi-pass exhaustive audit or a guarantee of absence of additional vulnerabilities."
+      ],
+      "runtimeStatus": "Static baseline validation; no original application or deployed proxy was executed during discovery. Later remediation tests are separate.",
+      "summary": "Repository-wide Standard source audit of the original checkout at 126d2a151ac8d7f66a72d5780fd0bc9a114aa722, before release remediation. Seven historical extension trees and their unique runtime, proxy, metadata, migration and developer-tool variants were examined."
+    },
+    "sealedAt": "2026-09-19T13:31:12.253835Z",
+    "startedAt": "2026-09-19T12:53:39.425205Z",
+    "status": "completed",
+    "target": {
+      "displayName": "spoiler",
+      "kind": "git_revision",
+      "revision": "126d2a151ac8d7f66a72d5780fd0bc9a114aa722",
+      "targetId": "target_sha256_8e65dae0aabc2e3127f100290c9353d24ee743441c7142598508566c29b5e4aa"
+    },
+    "threatModel": {
+      "assets": [
+        "User protection preferences, selected media, watched history, custom keywords, exceptions and learning weights are stored under extension chrome.storage.sync keys. User-specific preference keys use a sanitized email string, but all remain within one extension/browser-profile authority. Evidence: Spolier blocker v1/Spolier blocker Cursor new/options.js:797, Spolier blocker v1/Spolier blocker Cursor new/options.js:800, Spolier blocker v1/Spolier blocker Cursor new/popup.js:549.",
+        "Google profile identity and an OAuth access-token reference are combined in userAccount and persisted to chrome.storage.sync after successful authentication. Direct TMDB API keys, configured proxy URL and Wikipedia contact address are also saved to sync storage. Evidence: Spolier blocker v1/Spolier blocker Cursor new/options.js:242, Spolier blocker v1/Spolier blocker Cursor new/options.js:250, Spolier blocker v1/Spolier blocker Cursor new/options.js:797.",
+        "The proxy operator's DEFAULT_TMDB_KEY and upstream API quota belong to the separately deployed server. The consumer appends this environment-derived secret to requests to https://api.themoviedb.org; callers cannot select another upstream host through the request path. Evidence: Spolier blocker v1/Spolier blocker Cursor new/tmdb-proxy/server.js:9, Spolier blocker v1/Spolier blocker Cursor new/tmdb-proxy/server.js:54, Spolier blocker v1/Spolier blocker Cursor new/tmdb-proxy/server.js:80.",
+        "Webpage integrity, responsiveness, spoiler concealment, browser extension capabilities, and downloaded backup confidentiality matter. The content script modifies page DOM, while authorized popup/background actions may inject scripts. Evidence: Spolier blocker v1/Spolier blocker Cursor new/content.js:469, Spolier blocker v1/Spolier blocker Cursor new/background.js:267, Spolier blocker v1/Spolier blocker Cursor new/popup.js:653, Spolier blocker v1/Spolier blocker Cursor new/options.js:1192."
+      ],
+      "assumptions": [
+        "Architecture review only, performed offline and read-only at requested commit 126d2a1; this is not completed vulnerability-audit coverage or a runtime compatibility verdict.",
+        "The active/released source directory is unresolved. v1 is the strongest latest-code candidate because of manifest 1.3.0 and unique Wikipedia integration; folder names alone are unreliable. The v1 and v1 - Copy trees differ in nine files. No release chronology can be inferred from the single import commit.",
+        "Authentication is conditional: v1 manifest oauth2.client_id is a placeholder; fallback code uses a test-client identifier. No working OAuth registration, extension ID or deployed account integration was supplied. Evidence: Spolier blocker v1/Spolier blocker Cursor new/manifest.json:16, Spolier blocker v1/Spolier blocker Cursor new/options.js:168.",
+        "Documentation says settings remain locally in the browser, but implementation uses chrome.storage.sync for preferences, account/token state, selected profiles and diagnostics. Whether the user's browser synchronizes that store is host configuration, not an application-owned local-only guarantee. Evidence: Spolier blocker v1/Spolier blocker Cursor new/options.html:943, Spolier blocker v1/Spolier blocker Cursor new/options.js:250, Spolier blocker v1/Spolier blocker Cursor new/options.js:797, Spolier blocker v1/Spolier blocker Cursor new/content.js:582.",
+        "README says the proxy keeps API keys server-side, while the supported direct-key mode stores tmdbKey in browser sync storage and sends it to TMDB in a URL query. Both modes must remain represented. Evidence: Spolier blocker v1/Spolier blocker Cursor new/README.md:49, Spolier blocker v1/Spolier blocker Cursor new/options.js:797, Spolier blocker v1/Spolier blocker Cursor new/popup.js:385.",
+        "Wikipedia enrichment defaults enabled rather than requiring a dedicated first-use opt-in; metadata calls are not equivalent to transmitting visited-page contents. Evidence: Spolier blocker v1/Spolier blocker Cursor new/popup.js:995, Spolier blocker v1/Spolier blocker Cursor new/popup.js:1015.",
+        "indexeddb-manager.js is a placeholder, not durable IndexedDB storage. landing-sync.js and scripts/telemetry.js exist but no v1 manifest, HTML loader or actual caller activates them. Do not treat their postMessage bridge or telemetry endpoint as normal active runtime surfaces. Evidence: Spolier blocker v1/Spolier blocker Cursor new/indexeddb-manager.js:3, Spolier blocker v1/Spolier blocker Cursor new/manifest.json:39, Spolier blocker v1/Spolier blocker Cursor new/options.html:1077, Spolier blocker v1/Spolier blocker Cursor new/popup.html:369.",
+        "Nested .github/workflows files describe developer CI but are not root GitHub workflows for this repository layout. No active publication pipeline, deployed proxy environment, or hosted-server correspondence was established. Evidence for nested workflow assumptions: Spolier blocker v1/Spolier blocker Cursor new/.github/workflows/ci.yml:23, Spolier blocker v1/Spolier blocker Cursor new/.github/workflows/ci.yml:29.",
+        "Static inspection found UI for custom keywords, watched history, false-positive reports, learning weights, blur settings and telemetry. Presence of controls is not proof every setting affects the current V4 runtime; for example the v1 content getSettings call loads settings and selectedMedia, not customKeywords. Evidence: Spolier blocker v1/Spolier blocker Cursor new/popup.js:125, Spolier blocker v1/Spolier blocker Cursor new/popup.js:475, Spolier blocker v1/Spolier blocker Cursor new/content.js:100."
+      ],
+      "attackerCapabilities": [
+        "A website publisher or attacker controlling displayed posts can supply arbitrary DOM text, attributes, markup and mutation frequency on a page the user visits; this does not by itself grant Chrome extension APIs or access to the extension's sync store.",
+        "A party controlling an externally-connectable origin may send the permitted external message types if the extension is installed and discoverable. Arbitrary unrelated origins should not be assumed to bypass Chrome's manifest admission control. The account-token consequence additionally requires populated userAccount state from a functioning or imported authentication workflow.",
+        "A malicious metadata provider or configured proxy can control API response fields; a malicious backup author can control JSON that the user explicitly selects for import. Neither starts with arbitrary trusted extension-code execution.",
+        "A network client reaching a deployed proxy can choose paths, query parameters and non-browser HTTP headers. CORS is not evidence of client authentication; endpoint allowlisting, fixed upstream host and IP throttling are distinct controls. Public exposure, key configuration, reverse-proxy topology and any external gateway controls are unknown.",
+        "The operator or developer can alter extension code, configure API endpoints or server secrets, and package a release. Such existing authority is not modeled as an attacker escalation."
+      ],
+      "securityObjectives": [
+        "Keep OAuth and TMDB credential material within the intended identity/API consumers; only minimal profile data should cross any account-display boundary. Existing data paths are documented at Spolier blocker v1/Spolier blocker Cursor new/options.js:242 and Spolier blocker v1/Spolier blocker Cursor new/background.js:497.",
+        "Treat page DOM, API response fields and imported backup structures as data; preserve browser/extension isolation and prevent untrusted data from becoming privileged execution or unrestricted capability requests.",
+        "Preserve the user's global/site settings, keep detection responsive on mutation-heavy pages, and avoid revealing protected spoilers through normal UI flows. Actual DOM control points are Spolier blocker v1/Spolier blocker Cursor new/content.js:130, Spolier blocker v1/Spolier blocker Cursor new/content.js:469 and Spolier blocker v1/Spolier blocker Cursor new/content.js:603.",
+        "Bound use of the proxy operator's upstream key and quota across every upstream-requesting route, while restricting destinations and paths. Existing route-specific controls are Spolier blocker v1/Spolier blocker Cursor new/tmdb-proxy/server.js:47 and Spolier blocker v1/Spolier blocker Cursor new/tmdb-proxy/server.js:74.",
+        "Make privacy claims correspond to actual sync-storage, metadata, account and contact-address flows. User context requests a stable release with fixes; it supplies no additional deployment or tenant-isolation guarantees."
+      ],
+      "summary": "Spoiler Shield is a Chrome Manifest V3 extension with popup/options pages, a service worker, DOM-scanning content scripts, and an optional separately deployed Node/Express TMDB proxy. Users select media; the popup retrieves metadata and writes selectedMedia to chrome.storage.sync; content scripts read that selection and apply local V4 classification and blur/reveal DOM changes. The most advanced source candidate is Spolier blocker v1/Spolier blocker Cursor new: its manifest is 1.3.0 and its popup loads Wikipedia enrichment. The v1 - Copy tree also declares 1.3.0 but lacks Wikipedia; folders v1.1 through v1.5 declare 1.2.0. There is no root source selector establishing the actual released tree. Evidence: Spolier blocker v1/Spolier blocker Cursor new/manifest.json:4, Spolier blocker v1/Spolier blocker Cursor new/manifest.json:39, Spolier blocker v1/Spolier blocker Cursor new/popup.html:370, Spolier blocker v1/Spolier blocker Cursor new/popup.js:526, Spolier blocker v1/Spolier blocker Cursor new/content.js:202, Spolier blocker v1 - Copy/Spolier blocker Cursor new/manifest.json:4, Spolier blocker v1.5/Spolier blocker Cursor new/manifest.json:4.",
+      "trustBoundaries": [
+        "Arbitrary visited-page DOM enters manifest-registered content scripts. These scripts operate on page text and image alt/title metadata, combine it with trusted extension preferences, and wrap detected blocks. Browser content-script isolation is the host boundary; the repository's enablement controls are global enabled, suffix-matched include/exclude lists, and exact perSite entries. Evidence: Spolier blocker v1/Spolier blocker Cursor new/manifest.json:41, Spolier blocker v1/Spolier blocker Cursor new/content.js:130, Spolier blocker v1/Spolier blocker Cursor new/content.js:236, Spolier blocker v1/Spolier blocker Cursor new/content.js:450.",
+        "Extension popup/options pages and content scripts communicate with the service worker via Chrome messaging. The internal handler's reprocessing path uses sender.tab where available and otherwise the active tab; badge state uses sender.tab. This authority is separate from external webpage messaging. Evidence: Spolier blocker v1/Spolier blocker Cursor new/background.js:267, Spolier blocker v1/Spolier blocker Cursor new/background.js:293.",
+        "External webpages matching localhost, 127.0.0.1, *.yourdomain.com and the declared file pattern can request ping, account retrieval, options opening and sign-out via onMessageExternal. Manifest matching is the visible admission control; the handler does not inspect sender and returns the complete stored userAccount. Actual acceptance of every declared pattern remains browser-dependent. Evidence: Spolier blocker v1/Spolier blocker Cursor new/manifest.json:90, Spolier blocker v1/Spolier blocker Cursor new/background.js:489, Spolier blocker v1/Spolier blocker Cursor new/background.js:497, Spolier blocker v1/Spolier blocker Cursor new/background.js:510.",
+        "The popup transfers user-entered search terms to a configurable HTTPS TMDB proxy or direct TMDB API. Search code checks/request host permission, omits credentials, and imposes a ten-second timeout; metadata enrichment has its own consumer and a twelve-second timeout. Configured proxy takes precedence over direct-key metadata retrieval, including the shared default proxy. Evidence: Spolier blocker v1/Spolier blocker Cursor new/popup.js:18, Spolier blocker v1/Spolier blocker Cursor new/popup.js:239, Spolier blocker v1/Spolier blocker Cursor new/popup.js:373, Spolier blocker v1/Spolier blocker Cursor new/tmdb-knowledge-builder.js:20.",
+        "Wikipedia/Wikidata enrichment transfers title/search parameters and the configured contact address in Api-User-Agent to fixed Wikimedia API hosts. Returned profiles cross into selectedMedia and local detection. Requests omit browser credentials and time out after twelve seconds. Evidence: Spolier blocker v1/Spolier blocker Cursor new/wikipedia-knowledge-builder.js:6, Spolier blocker v1/Spolier blocker Cursor new/wikipedia-knowledge-builder.js:11, Spolier blocker v1/Spolier blocker Cursor new/wikipedia-knowledge-builder.js:16, Spolier blocker v1/Spolier blocker Cursor new/popup.js:1010.",
+        "Google authentication uses Chrome identity APIs with a launchWebAuthFlow fallback, obtains profile information from Google's userinfo endpoint and persists the resulting account. This is an identity/profile convenience feature, not a server-enforced multi-tenant authorization system. Evidence: Spolier blocker v1/Spolier blocker Cursor new/options.js:144, Spolier blocker v1/Spolier blocker Cursor new/options.js:168, Spolier blocker v1/Spolier blocker Cursor new/options.js:220, Spolier blocker v1/Spolier blocker Cursor new/options.js:354.",
+        "A user-selected backup JSON file enters extension storage. The effective v1 import function checks for a version field, asks the user to confirm, and writes seven explicitly selected preference/history fields; it does not import account or API-key fields. The earlier v1.1 deployment imports arbitrary parsed top-level keys and exports the entire sync store. Evidence: Spolier blocker v1/Spolier blocker Cursor new/options.js:1178, Spolier blocker v1/Spolier blocker Cursor new/options.js:1207, Spolier blocker v1.1/Spolier blocker Cursor new/options.js:931, Spolier blocker v1.1/Spolier blocker Cursor new/options.js:943.",
+        "Network clients enter the optional Express proxy. CORS checks an environment-origin allowlist, or accepts chrome-extension origins by default; development mode also permits missing Origin. /3/ requests have a 100-request/15-minute IP limiter and an endpoint regex allowlist before using the operator's key. /health is a distinct upstream-requesting route outside that limiter. Evidence: Spolier blocker v1/Spolier blocker Cursor new/tmdb-proxy/server.js:13, Spolier blocker v1/Spolier blocker Cursor new/tmdb-proxy/server.js:38, Spolier blocker v1/Spolier blocker Cursor new/tmdb-proxy/server.js:54, Spolier blocker v1/Spolier blocker Cursor new/tmdb-proxy/server.js:104."
+      ]
+    }
+  },
+  "schemaVersion": "1.0"
+}

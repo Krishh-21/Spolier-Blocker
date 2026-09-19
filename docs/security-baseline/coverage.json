@@ -1,0 +1,96 @@
+{
+  "completeness": "partial",
+  "deferred": [],
+  "documentType": "codex-security.coverage",
+  "excludePaths": [],
+  "explicitExclusions": [
+    {
+      "pattern": "*.zip; binary images/fonts",
+      "reason": "Historical archives and binary media were inventoried, not unpacked or security audited."
+    },
+    {
+      "pattern": "node_modules/**; transitive dependency source",
+      "reason": "Dependency advisory checks were performed separately during remediation; not an exhaustive source audit of dependencies."
+    }
+  ],
+  "includePaths": [
+    "."
+  ],
+  "inventoryStrategy": "repository",
+  "mode": "repository",
+  "openQuestions": [
+    {
+      "question": "Whether any historical proxy is publicly deployed with a real key or additional ingress limits."
+    },
+    {
+      "question": "Whether any distributed build replaces the placeholder OAuth client ID; token disclosure requires a stored account token."
+    }
+  ],
+  "scanId": "f03116a8-2771-49df-9abd-ed95925cf020",
+  "schemaVersion": "1.0",
+  "surfaces": [
+    {
+      "disposition": "reported",
+      "id": "surface_extension-credentials-and-messaging-boundaries",
+      "label": "Extension credentials and messaging boundaries",
+      "notes": "Traced options OAuth storage to five external background handlers and their manifest allowlists; evaluated content-script storage, extension-page rendering and sender boundaries.",
+      "receiptRefs": []
+    },
+    {
+      "disposition": "reported",
+      "id": "surface_proxy-route-authentication-availability-and-error-handling",
+      "label": "Proxy route authentication, availability and error handling",
+      "notes": "Reviewed both unique server variants, six equivalent health routes, rate limiter placement, URL construction and error serialization. Deployment and reverse-proxy behavior remain unknown.",
+      "receiptRefs": []
+    },
+    {
+      "disposition": "reported",
+      "id": "surface_untrusted-metadata-page-dom-and-backup-imports",
+      "label": "Untrusted metadata, page DOM and backup imports",
+      "notes": "Reviewed original title rendering and all active import-handler variants. Confirmed watched metadata HTML injection, three page-readable sessionStorage watchlists and v1.1 import-to-CSS path. CSP and broken later event binding limit impact/reachability.",
+      "receiptRefs": []
+    },
+    {
+      "disposition": "no_issue_found",
+      "id": "surface_detection-lifecycle-and-all-remaining-content-variants",
+      "label": "Detection lifecycle and all remaining content variants",
+      "notes": "Full source or complete differing hunks reviewed for v1, Copy, v1.1/v1.2 and v1.4/v1.5 detector, knowledge, integration, content and popup variants. Additional functional gaps include dropped mutations, stale attributes, disabled-mode observers and keyword settings ignored by active V4 logic; not classified as attacker-driven security findings.",
+      "receiptRefs": []
+    },
+    {
+      "disposition": "no_issue_found",
+      "id": "surface_metadata-builders-and-legacy-auxiliary-modules",
+      "label": "Metadata builders and legacy auxiliary modules",
+      "notes": "Reviewed unique TMDB builders, Wikipedia enrichment, compression, V3 enhancement/integration/options, V4 bridge and asset conversion scripts. No additional validated remote-code execution or arbitrary-host credential disclosure. Some modules are not loaded by the manifest.",
+      "receiptRefs": []
+    },
+    {
+      "disposition": "no_issue_found",
+      "id": "surface_persistence-onboarding-and-developer-benchmarks",
+      "label": "Persistence, onboarding and developer benchmarks",
+      "notes": "Reviewed real/stub IndexedDB implementations, both onboarding variants, i18n and complete benchmark/test scripts; hash-identical copies inherit review. Destructive historical phrase migration and benchmark exit-status/fixture-count defects are functional issues. No externally reachable database writer or attacker-controlled eval source was established.",
+      "receiptRefs": []
+    },
+    {
+      "disposition": "reported",
+      "id": "surface_extension-external-messaging-metadata-rendering-and-legacy-backup-boundaries",
+      "label": "Extension external messaging, metadata rendering and legacy backup boundaries",
+      "notes": "Validated by independent baseline and parent source review. Chrome external admission/CSP limit exploit reachability; OAuth needs working configuration.",
+      "receiptRefs": []
+    },
+    {
+      "disposition": "reported",
+      "id": "surface_proxy-health-request-budget-and-raw-error-disclosure",
+      "label": "Proxy health request budget and raw-error disclosure",
+      "notes": "Fixed upstream host/path allowlist rejects SSRF. Parent verified node-fetch 2.7.0 URL-bearing network error formatting from official source; no deployment probed.",
+      "receiptRefs": []
+    },
+    {
+      "disposition": "reported",
+      "id": "surface_legacy-content-script-page-storage",
+      "label": "Legacy content-script page storage",
+      "notes": "Full selectedMedia list crosses into page-origin sessionStorage in v1.1-v1.3.",
+      "receiptRefs": []
+    }
+  ]
+}
